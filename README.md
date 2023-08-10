@@ -1,6 +1,6 @@
-# logic-lut
+# Volute
 
-Truth table implementation (also called lookup tables, or Luts).
+Implementation of logic functions as truth tables (also called lookup tables, or Luts).
 
 The crate implements truth table datastructures, either arbitrary-size Luts (`Lut`), or more efficient fixed-size Luts (`Lut2` to `Lut12`).
 They provide logical operators and utility functions for analysis, canonization and decomposition.

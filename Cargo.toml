@@ -1,5 +1,5 @@
 [package]
-name = "logic-lut"
+name = "volute"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,7 +9,8 @@ authors = ["Gabriel Gouvine <gabriel.gouvine_cargo@m4x.org>"]
 description = "Boolean functions implementation, represented as lookup tables"
 license = "MIT OR Apache-2.0"
 keywords = ["boolean function", "logic function", "lut", "lookup table", "truth table"]
-repository = "https://github.com/Coloquinte/logic-lut"
+repository = "https://github.com/Coloquinte/volute"
+homepage = "https://github.com/Coloquinte/volute"
 categories = ["mathematics", "algorithms"]
 
 [dependencies]
