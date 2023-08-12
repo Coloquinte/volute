@@ -216,6 +216,14 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
         l
     }
 
+    /// Obtain the two cofactors with respect to a variable
+    pub fn cofactors(&self, ind: usize) -> (Self, Self) {
+        let mut c = (self.clone(), self.clone());
+        cofactor0_inplace(self.num_vars(), c.0.table.as_mut(), ind);
+        cofactor1_inplace(self.num_vars(), c.1.table.as_mut(), ind);
+        c
+    }
+
     /// Find the smallest equivalent Lut up to permutation.
     /// Return the canonical representation and the input permutation to obtain it.
     pub fn p_canonization(&self) -> (Self, [u8; N]) {

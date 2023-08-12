@@ -221,6 +221,14 @@ impl Lut {
         l
     }
 
+    /// Obtain the two cofactors with respect to a variable
+    pub fn cofactors(&self, ind: usize) -> (Self, Self) {
+        let mut c = (self.clone(), self.clone());
+        cofactor0_inplace(self.num_vars(), c.0.table.as_mut(), ind);
+        cofactor1_inplace(self.num_vars(), c.1.table.as_mut(), ind);
+        c
+    }
+
     /// Find the smallest equivalent Lut up to permutation.
     /// Return the canonical representation and the input permutation to obtain it.
     pub fn p_canonization(&self) -> (Self, Vec<u8>) {
@@ -694,6 +702,44 @@ mod tests {
                                 assert_eq!(l.decomposition(v), DecompositionType::Independent);
                                 assert!(l.is_pos_unate(v));
                                 assert!(l.is_neg_unate(v));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_cofactors() {
+        for i in 0..=8 {
+            for v1 in 1..i {
+                for v2 in 0..v1 {
+                    let l1 = Lut::nth_var(i, v1);
+                    let l2 = Lut::nth_var(i, v2);
+                    let and = &l1 & &l2;
+                    let or = &l1 | &l2;
+                    let nand = !&and;
+                    let nor = !&or;
+                    let xor = &l1 ^ &l2;
+                    let xnor = !&xor;
+                    for v in 0..i {
+                        if v == v1 || v == v2 {
+                            let ov = v1 ^ v2 ^ v;
+                            assert_eq!(and.cofactors(v).0, Lut::zero(i));
+                            assert_eq!(and.cofactors(v).1, Lut::nth_var(i, ov));
+                            assert_eq!(nand.cofactors(v).0, Lut::one(i));
+                            assert_eq!(nand.cofactors(v).1, !Lut::nth_var(i, ov));
+                            assert_eq!(or.cofactors(v).1, Lut::one(i));
+                            assert_eq!(or.cofactors(v).0, Lut::nth_var(i, ov));
+                            assert_eq!(nor.cofactors(v).1, Lut::zero(i));
+                            assert_eq!(nor.cofactors(v).0, !Lut::nth_var(i, ov));
+                            assert_eq!(xor.cofactors(v).0, !xor.cofactors(v).1);
+                            assert_eq!(xnor.cofactors(v).0, !xnor.cofactors(v).1);
+                        } else {
+                            for l in [&l1, &l2, &and, &or, &nand, &nor, &xor, &xnor] {
+                                assert_eq!(&l.cofactors(v).0, l);
+                                assert_eq!(&l.cofactors(v).1, l);
                             }
                         }
                     }

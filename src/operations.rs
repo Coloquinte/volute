@@ -328,6 +328,44 @@ pub fn flip_inplace(num_vars: usize, table: &mut [u64], ind: usize) {
     }
 }
 
+pub fn cofactor0_inplace(num_vars: usize, table: &mut [u64], ind: usize) {
+    debug_assert_eq!(table.len(), table_size(num_vars));
+    debug_assert!(ind < num_vars);
+    if ind <= 5 {
+        let shift = 1 << ind;
+        let m0 = !VAR_MASK[ind];
+        for t in table {
+            *t = (*t & m0) + ((*t & m0) << shift);
+        }
+    } else {
+        let stride = 1 << (ind - 6);
+        for i in 0..table.len() {
+            if i & stride == 0 {
+                table[i + stride] = table[i];
+            }
+        }
+    }
+}
+
+pub fn cofactor1_inplace(num_vars: usize, table: &mut [u64], ind: usize) {
+    debug_assert_eq!(table.len(), table_size(num_vars));
+    debug_assert!(ind < num_vars);
+    if ind <= 5 {
+        let shift = 1 << ind;
+        let m1 = VAR_MASK[ind];
+        for t in table {
+            *t = ((*t & m1) >> shift) + (*t & m1);
+        }
+    } else {
+        let stride = 1 << (ind - 6);
+        for i in 0..table.len() {
+            if i & stride == 0 {
+                table[i] = table[i + stride];
+            }
+        }
+    }
+}
+
 /// Advance to the next Lut, and return true if the Lut didn't roll back
 pub fn next_inplace(num_vars: usize, table: &mut [u64]) -> bool {
     debug_assert_eq!(table.len(), table_size(num_vars));
@@ -439,8 +477,7 @@ pub fn decomposition(num_vars: usize, table: &[u64], ind: usize) -> Decompositio
 
     if indep {
         DecompositionType::Independent
-    }
-    else if and {
+    } else if and {
         DecompositionType::And
     } else if or {
         DecompositionType::Or
