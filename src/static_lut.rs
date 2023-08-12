@@ -224,18 +224,26 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
         c
     }
 
+    /// Create a Lut from its two cofactors
+    pub fn from_cofactors(c0: &Self, c1: &Self, ind: usize) -> Self {
+        let mut ret = Self::zero();
+        from_cofactors_inplace(
+            N,
+            ret.table.as_mut(),
+            c0.table.as_ref(),
+            c1.table.as_ref(),
+            ind,
+        );
+        ret
+    }
+
     /// Find the smallest equivalent Lut up to permutation.
     /// Return the canonical representation and the input permutation to obtain it.
     pub fn p_canonization(&self) -> (Self, [u8; N]) {
         let mut work = self.clone();
         let mut ret = self.clone();
         let mut perm = [0; N];
-        p_canonization(
-            N,
-            work.table.as_mut(),
-            ret.table.as_mut(),
-            perm.as_mut(),
-        );
+        p_canonization(N, work.table.as_mut(), ret.table.as_mut(), perm.as_mut());
         (ret, perm)
     }
 
@@ -254,12 +262,7 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
         let mut work = self.clone();
         let mut ret = self.clone();
         let mut perm = [0; N];
-        let flip = npn_canonization(
-            N,
-            work.table.as_mut(),
-            ret.table.as_mut(),
-            perm.as_mut(),
-        );
+        let flip = npn_canonization(N, work.table.as_mut(), ret.table.as_mut(), perm.as_mut());
         (ret, perm, flip)
     }
 

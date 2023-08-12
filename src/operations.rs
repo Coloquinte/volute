@@ -365,6 +365,29 @@ pub fn cofactor1_inplace(num_vars: usize, table: &mut [u64], ind: usize) {
         }
     }
 }
+pub fn from_cofactors_inplace(num_vars: usize, table: &mut [u64], t0: &[u64], t1: &[u64], ind: usize) {
+    debug_assert_eq!(table.len(), table_size(num_vars));
+    debug_assert_eq!(t0.len(), table_size(num_vars));
+    debug_assert_eq!(t1.len(), table_size(num_vars));
+    debug_assert!(ind < num_vars);
+    if ind <= 5 {
+        let m1 = VAR_MASK[ind];
+        let m0 = !VAR_MASK[ind];
+        for i in 0..table.len() {
+            table[i] = (t1[i] & m1) + (t0[i] & m0);
+        }
+    } else {
+        let stride = 1 << (ind - 6);
+        for i in 0..table.len() {
+            if i & stride == 0 {
+                table[i] = t0[i];
+            }
+            else {
+                table[i] = t1[i];
+            }
+        }
+    }
+}
 
 /// Advance to the next Lut, and return true if the Lut didn't roll back
 pub fn next_inplace(num_vars: usize, table: &mut [u64]) -> bool {

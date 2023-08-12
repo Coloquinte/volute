@@ -229,6 +229,20 @@ impl Lut {
         c
     }
 
+    /// Create a Lut from its two cofactors
+    pub fn from_cofactors(c0: &Self, c1: &Self, ind: usize) -> Self {
+        assert_eq!(c0.num_vars, c1.num_vars);
+        let mut ret = Lut::new(c0.num_vars);
+        from_cofactors_inplace(
+            c0.num_vars,
+            ret.table.as_mut(),
+            c0.table.as_ref(),
+            c1.table.as_ref(),
+            ind,
+        );
+        ret
+    }
+
     /// Find the smallest equivalent Lut up to permutation.
     /// Return the canonical representation and the input permutation to obtain it.
     pub fn p_canonization(&self) -> (Self, Vec<u8>) {
@@ -724,6 +738,12 @@ mod tests {
                     let xor = &l1 ^ &l2;
                     let xnor = !&xor;
                     for v in 0..i {
+                        for l in [&l1, &l2, &and, &or, &nand, &nor, &xor, &xnor] {
+                            assert_eq!(
+                                &Lut::from_cofactors(&l.cofactors(v).0, &l.cofactors(v).1, v),
+                                l
+                            );
+                        }
                         if v == v1 || v == v2 {
                             let ov = v1 ^ v2 ^ v;
                             assert_eq!(and.cofactors(v).0, Lut::zero(i));
