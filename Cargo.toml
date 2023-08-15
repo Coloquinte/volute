@@ -14,3 +14,10 @@ homepage = "https://github.com/Coloquinte/volute"
 categories = ["mathematics", "algorithms"]
 
 [dependencies]
+
+[dev-dependencies]
+criterion = "0.5"
+
+[[bench]]
+name = "canonization"
+harness = false
