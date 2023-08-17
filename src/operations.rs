@@ -97,7 +97,7 @@ pub fn fill_one(num_vars: usize, table: &mut [u64]) {
     debug_assert_eq!(table.len(), table_size(num_vars));
     let mask = num_vars_mask(num_vars);
     for t in table {
-        *t = mask & !0u64;
+        *t = mask;
     }
 }
 
@@ -365,7 +365,13 @@ pub fn cofactor1_inplace(num_vars: usize, table: &mut [u64], ind: usize) {
         }
     }
 }
-pub fn from_cofactors_inplace(num_vars: usize, table: &mut [u64], t0: &[u64], t1: &[u64], ind: usize) {
+pub fn from_cofactors_inplace(
+    num_vars: usize,
+    table: &mut [u64],
+    t0: &[u64],
+    t1: &[u64],
+    ind: usize,
+) {
     debug_assert_eq!(table.len(), table_size(num_vars));
     debug_assert_eq!(t0.len(), table_size(num_vars));
     debug_assert_eq!(t1.len(), table_size(num_vars));
@@ -381,8 +387,7 @@ pub fn from_cofactors_inplace(num_vars: usize, table: &mut [u64], t0: &[u64], t1
         for i in 0..table.len() {
             if i & stride == 0 {
                 table[i] = t0[i];
-            }
-            else {
+            } else {
                 table[i] = t1[i];
             }
         }
@@ -399,7 +404,7 @@ pub fn next_inplace(num_vars: usize, table: &mut [u64]) -> bool {
             return true;
         }
     }
-    return false;
+    false
 }
 
 /// A helper function to many properties of an input using the cofactors
@@ -436,7 +441,7 @@ where
             }
         }
     }
-    return ret;
+    ret
 }
 
 pub fn input_independent(num_vars: usize, table: &[u64], ind: usize) -> bool {

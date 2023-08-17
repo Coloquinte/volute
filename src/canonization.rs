@@ -299,7 +299,7 @@ pub fn p_canonization(num_vars: usize, table: &mut [u64], best: &mut [u64], res_
     if num_vars <= 6 {
         let best_ind =
             p_canonization_ind(num_vars, &mut table[0..1], &mut best[0..1], SWAPS[num_vars]);
-        p_canonization_res(num_vars, res_perm, &SWAPS[num_vars], best_ind);
+        p_canonization_res(num_vars, res_perm, SWAPS[num_vars], best_ind);
     } else {
         let all_swaps = generate_swaps(num_vars, true);
         let best_ind = p_canonization_ind(num_vars, table, best, &all_swaps);

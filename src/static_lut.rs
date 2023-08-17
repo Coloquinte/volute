@@ -28,12 +28,12 @@ impl<const N: usize, const T: usize> Default for StaticLut<N, T> {
 impl<const N: usize, const T: usize> StaticLut<N, T> {
     /// Query the number of variables of the Lut
     pub fn num_vars(&self) -> usize {
-        return N;
+        N
     }
 
     /// Query the number of bits in the Lut
     pub fn num_bits(&self) -> usize {
-        return 1 << N;
+        1 << N
     }
 
     /// Check that an input is valid for an operation
@@ -169,56 +169,56 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
 
     /// Complement the Lut: f(x) --> !f(x)
     pub fn not(&self) -> StaticLut<N, T> {
-        let mut l = self.clone();
+        let mut l = *self;
         l.not_inplace();
         l
     }
 
     /// And two Luts
     pub fn and(&self, rhs: &Self) -> Self {
-        let mut l = self.clone();
+        let mut l = *self;
         l.and_inplace(rhs);
         l
     }
 
     /// Or two Luts
     pub fn or(&self, rhs: &Self) -> Self {
-        let mut l = self.clone();
+        let mut l = *self;
         l.or_inplace(rhs);
         l
     }
 
     /// Xor two Luts
     pub fn xor(&self, rhs: &Self) -> Self {
-        let mut l = self.clone();
+        let mut l = *self;
         l.xor_inplace(rhs);
         l
     }
 
     /// Flip a variable: f(x1, ... xi, ... xn) --> f(x1, ... !xi, ... xn)
     pub fn flip(&self, ind: usize) -> Self {
-        let mut l = self.clone();
+        let mut l = *self;
         l.flip_inplace(ind);
         l
     }
 
     /// Swap two variables: f(..., xi, ..., xj, ...) --> f(..., xj, ..., xi, ...)
     pub fn swap(&self, ind1: usize, ind2: usize) -> Self {
-        let mut l = self.clone();
+        let mut l = *self;
         l.swap_inplace(ind1, ind2);
         l
     }
 
     /// Swap two adjacent variables: f(..., xi, x+1, ...) --> f(..., xi+1, xi, ...)
     pub fn swap_adjacent(&mut self, ind: usize) -> Self {
-        let mut l = self.clone();
+        let mut l = *self;
         l.swap_adjacent_inplace(ind);
         l
     }
 
     /// Obtain the two cofactors with respect to a variable
     pub fn cofactors(&self, ind: usize) -> (Self, Self) {
-        let mut c = (self.clone(), self.clone());
+        let mut c = (*self, *self);
         cofactor0_inplace(self.num_vars(), c.0.table.as_mut(), ind);
         cofactor1_inplace(self.num_vars(), c.1.table.as_mut(), ind);
         c
@@ -240,8 +240,8 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
     /// Find the smallest equivalent Lut up to permutation.
     /// Return the canonical representation and the input permutation to obtain it.
     pub fn p_canonization(&self) -> (Self, [u8; N]) {
-        let mut work = self.clone();
-        let mut ret = self.clone();
+        let mut work = *self;
+        let mut ret = *self;
         let mut perm = [0; N];
         p_canonization(N, work.table.as_mut(), ret.table.as_mut(), perm.as_mut());
         (ret, perm)
@@ -250,8 +250,8 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
     /// Find the smallest equivalent Lut up to input flips and output flip.
     /// Return the canonical representation and the flips to obtain it.
     pub fn n_canonization(&self) -> (Self, u32) {
-        let mut work = self.clone();
-        let mut ret = self.clone();
+        let mut work = *self;
+        let mut ret = *self;
         let flip = n_canonization(N, work.table.as_mut(), ret.table.as_mut());
         (ret, flip)
     }
@@ -259,8 +259,8 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
     /// Find the smallest equivalent Lut up to permutation, input flips and output flip.
     /// Return the canonical representation and the permutation and flips to obtain it.
     pub fn npn_canonization(&self) -> (Self, [u8; N], u32) {
-        let mut work = self.clone();
-        let mut ret = self.clone();
+        let mut work = *self;
+        let mut ret = *self;
         let mut perm = [0; N];
         let flip = npn_canonization(N, work.table.as_mut(), ret.table.as_mut(), perm.as_mut());
         (ret, perm, flip)
@@ -303,7 +303,7 @@ impl<const N: usize, const T: usize> Iterator for StaticLutIterator<N, T> {
         if !self.ok {
             None
         } else {
-            let ret = self.lut.clone();
+            let ret = self.lut;
             self.ok = next_inplace(N, self.lut.table.as_mut());
             Some(ret)
         }
@@ -334,7 +334,7 @@ impl<const N: usize, const T: usize> Not for StaticLut<N, T> {
 impl<const N: usize, const T: usize> Not for &'_ StaticLut<N, T> {
     type Output = StaticLut<N, T>;
     fn not(self) -> Self::Output {
-        let mut l = self.clone();
+        let mut l = *self;
         l.not_inplace();
         l
     }
@@ -364,7 +364,7 @@ impl<const N: usize, const T: usize> BitAnd for StaticLut<N, T> {
 impl<'a, const N: usize, const T: usize> BitAnd<&'a StaticLut<N, T>> for StaticLut<N, T> {
     type Output = Self;
     fn bitand(self, rhs: &'a StaticLut<N, T>) -> Self::Output {
-        let mut l = self.clone();
+        let mut l = self;
         l &= rhs;
         l
     }
@@ -394,7 +394,7 @@ impl<const N: usize, const T: usize> BitOr for StaticLut<N, T> {
 impl<'a, const N: usize, const T: usize> BitOr<&'a StaticLut<N, T>> for StaticLut<N, T> {
     type Output = Self;
     fn bitor(self, rhs: &'a StaticLut<N, T>) -> Self::Output {
-        let mut l = self.clone();
+        let mut l = self;
         l |= rhs;
         l
     }
@@ -424,7 +424,7 @@ impl<const N: usize, const T: usize> BitXor for StaticLut<N, T> {
 impl<'a, const N: usize, const T: usize> BitXor<&'a StaticLut<N, T>> for StaticLut<N, T> {
     type Output = Self;
     fn bitxor(self, rhs: &'a StaticLut<N, T>) -> Self::Output {
-        let mut l = self.clone();
+        let mut l = self;
         l ^= rhs;
         l
     }
