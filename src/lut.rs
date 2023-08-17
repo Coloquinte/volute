@@ -23,18 +23,18 @@ pub struct Lut {
 impl Lut {
     /// Query the number of variables of the Lut
     pub fn num_vars(&self) -> usize {
-        return self.num_vars;
+        self.num_vars
     }
 
     /// Query the number of bits in the Lut
     pub fn num_bits(&self) -> usize {
-        return 1 << self.num_vars;
+        1 << self.num_vars
     }
 
     /// Create a new Lut
     fn new(num_vars: usize) -> Lut {
         Lut {
-            num_vars: num_vars,
+            num_vars,
             table: vec![0; table_size(num_vars)].into_boxed_slice(),
         }
     }
