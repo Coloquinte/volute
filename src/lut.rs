@@ -111,6 +111,14 @@ impl Lut {
         ret
     }
 
+    /// Create a random Lut
+    #[cfg(feature = "rand")]
+    pub fn random(num_vars: usize) -> Lut {
+        let mut ret = Lut::new(num_vars);
+        fill_random(num_vars, ret.table.as_mut());
+        ret
+    }
+
     /// Get the value of the Lut for these inputs (input bits packed in the mask)
     pub fn get_bit(&self, mask: usize) -> bool {
         self.check_bit(mask);
@@ -765,6 +773,14 @@ mod tests {
                     }
                 }
             }
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "rand")]
+    fn test_random() {
+        for i in 0..=8 {
+            Lut::random(i);
         }
     }
 }

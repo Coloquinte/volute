@@ -106,6 +106,14 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
         ret
     }
 
+    /// Create a random Lut
+    #[cfg(feature = "rand")]
+    pub fn random() -> Self {
+        let mut ret = Self::default();
+        fill_random(N, ret.table.as_mut());
+        ret
+    }
+
     /// Get the value of the Lut for these inputs (input bits packed in the mask)
     pub fn get_bit(&self, mask: usize) -> bool {
         self.check_bit(mask);
@@ -479,7 +487,7 @@ pub type Lut12 = StaticLut<12, 64>;
 
 #[cfg(test)]
 mod tests {
-    use crate::{Lut0, Lut1, Lut2, Lut3, Lut4};
+    use crate::{Lut0, Lut1, Lut2, Lut3, Lut4, Lut5, Lut6, Lut7};
 
     #[test]
     fn test_symmetric() {
@@ -503,5 +511,18 @@ mod tests {
         assert_eq!(format!("{:}", Lut2::one()), "Lut2(f)");
         assert_eq!(format!("{:}", Lut3::zero()), "Lut3(00)");
         assert_eq!(format!("{:}", Lut3::one()), "Lut3(ff)");
+    }
+
+    #[test]
+    #[cfg(feature = "rand")]
+    fn test_random() {
+        Lut0::random();
+        Lut1::random();
+        Lut2::random();
+        Lut3::random();
+        Lut4::random();
+        Lut5::random();
+        Lut6::random();
+        Lut7::random();
     }
 }

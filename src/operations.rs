@@ -165,6 +165,14 @@ pub fn fill_majority(num_vars: usize, table: &mut [u64]) {
     fill_threshold(num_vars, table, (num_vars + 1) / 2);
 }
 
+/// Fill with random data
+#[cfg(feature = "rand")]
+pub fn fill_random(num_vars: usize, table: &mut [u64]) {
+    use rand::RngCore;
+    for i in 0..table.len() {
+        table[i] &= rand::thread_rng().next_u64() & num_vars_mask(num_vars);
+    }
+}
 /// Get a single bit in a LUT from a mask
 pub fn get_bit(num_vars: usize, table: &[u64], ind: usize) -> bool {
     debug_assert!(ind < 1 << num_vars);
