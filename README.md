@@ -1,16 +1,14 @@
 ![crates.io](https://img.shields.io/crates/v/volute.svg)
 ![Build](https://github.com/Coloquinte/volute/actions/workflows/build.yml/badge.svg)
 
-# Volute
-
 Implementation of logic functions as truth tables (also called lookup tables, or Luts).
 
-The crate implements truth table datastructures, either arbitrary-size Luts (`Lut`), or more efficient fixed-size Luts (`Lut2` to `Lut12`).
+The crate implements truth table datastructures, either arbitrary-size Luts ([`Lut`](https://docs.rs/volute/latest/volute/struct.Lut.html)), or more efficient fixed-size Luts ([`Lut2` to `Lut12`](https://docs.rs/volute/latest/volute/struct.StaticLut.html)).
 They provide logical operators and utility functions for analysis, canonization and decomposition.
 
 API and documentation try to follow the same terminology as the C++ library [Kitty](https://libkitty.readthedocs.io/en/latest).
 
-## Examples
+# Examples
 
 Create a constant-one Lut with five variables.
 Display its hexadecimal value.
