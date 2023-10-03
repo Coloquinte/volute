@@ -10,15 +10,26 @@
 //! # Examples
 //!
 //! Create a constant-one Lut with five variables.
-//! Display its hexadecimal value.
+//! Check its hexadecimal value.
 //! ```
 //! # use volute::Lut;
 //! let lut = Lut::one(5);
 //! assert_eq!(lut.to_string(), "Lut5(ffffffff)");
 //! ```
 //!
+#![cfg_attr(
+    feature = "rand",
+    doc = r#"
+Create a random Lut6 (six variables).
+Display its hexadecimal value.
+```
+# use volute::Lut6;
+let lut = Lut6::random();
+print!("{}", lut);
+```"#
+)]
 //! Create a Lut4 (four variables) which is the logical and of the 1st and 3rd.
-//! Display its hexadecimal value.
+//! Check its hexadecimal value.
 //! ```
 //! # use volute::Lut4;
 //! let lut = Lut4::nth_var(0) & Lut4::nth_var(2);
@@ -26,7 +37,7 @@
 //! ```
 //!
 //! Create the parity function on three variables, and check that in can be decomposed as a Xor.
-//! Display its value in binary.
+//! Check its value in binary.
 //! ```
 //! # use volute::Lut;
 //! # use volute::DecompositionType;
@@ -34,6 +45,7 @@
 //! assert_eq!(lut.decomposition(0), DecompositionType::Xor);
 //! assert_eq!(format!("{:b}", lut), "Lut3(10010110)");
 //! ```
+
 mod canonization;
 mod lut;
 mod operations;

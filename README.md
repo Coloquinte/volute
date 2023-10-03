@@ -11,21 +11,28 @@ API and documentation try to follow the same terminology as the C++ library [Kit
 # Examples
 
 Create a constant-one Lut with five variables.
-Display its hexadecimal value.
+Check its hexadecimal value.
 ```rust
 let lut = Lut::one(5);
 assert_eq!(lut.to_string(), "Lut5(ffffffff)");
 ```
 
-Create a Lut4 (four variables) which is the logical and of the 1st and 3rd.
+Create a random Lut6 (six variables).
 Display its hexadecimal value.
+```rust
+let lut = Lut6::random();
+print!("{}", lut);
+```
+
+Create a Lut4 (four variables) which is the logical and of the 1st and 3rd.
+Check its hexadecimal value.
 ```rust
 let lut = Lut4::nth_var(0) & Lut4::nth_var(2);
 assert_eq!(lut.to_string(), "Lut4(a0a0)");
 ```
 
 Create the parity function on three variables, and check that in can be decomposed as a Xor.
-Display its value in binary.
+Check its value in binary.
 ```rust
 let lut = Lut::parity(3);
 assert_eq!(lut.decomposition(0), DecompositionType::Xor);
