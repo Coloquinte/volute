@@ -1,3 +1,6 @@
+![crates.io](https://img.shields.io/crates/v/volute.svg)
+![Build](https://github.com/Coloquinte/volute/actions/workflows/build.yml/badge.svg)
+
 # Volute
 
 Implementation of logic functions as truth tables (also called lookup tables, or Luts).
