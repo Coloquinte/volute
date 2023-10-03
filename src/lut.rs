@@ -31,6 +31,11 @@ impl Lut {
         1 << self.num_vars
     }
 
+    /// Query the number of 64-bit blocks in the Lut
+    pub fn num_blocks(&self) -> usize {
+        table_size(self.num_vars)
+    }
+
     /// Create a new Lut
     fn new(num_vars: usize) -> Lut {
         Lut {
@@ -248,6 +253,19 @@ impl Lut {
             c1.table.as_ref(),
             ind,
         );
+        ret
+    }
+
+    /// Return the internal representation as 64-bit blocks
+    pub fn blocks(&self) -> &[u64] {
+        self.table.as_ref()
+    }
+
+    /// Create a Lut from its internal representation as 64-bit blocks
+    pub fn from_blocks(num_vars: usize, blocks: &[u64]) -> Self {
+        let mut ret = Self::zero(num_vars);
+        assert!(blocks.len() == ret.num_blocks());
+        ret.table.clone_from_slice(blocks);
         ret
     }
 

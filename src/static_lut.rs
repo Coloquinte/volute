@@ -12,6 +12,7 @@ use crate::canonization::n_canonization;
 use crate::canonization::npn_canonization;
 use crate::canonization::p_canonization;
 use crate::operations::*;
+use crate::Lut;
 
 /// Fixed-size truth table
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
@@ -34,6 +35,11 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
     /// Query the number of bits in the Lut
     pub fn num_bits(&self) -> usize {
         1 << N
+    }
+
+    /// Query the number of 64-bit blocks in the Lut
+    pub fn num_blocks(&self) -> usize {
+        table_size(N)
     }
 
     /// Check that an input is valid for an operation
@@ -242,6 +248,18 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
             c1.table.as_ref(),
             ind,
         );
+        ret
+    }
+
+    /// Return the internal representation as 64-bit blocks
+    pub fn blocks(&self) -> &[u64] {
+        self.table.as_ref()
+    }
+
+    /// Create a Lut from its internal representation as 64-bit blocks
+    pub fn from_blocks(blocks: &[u64]) -> Self {
+        let mut ret = Self::default();
+        ret.table.clone_from_slice(blocks);
         ret
     }
 
@@ -456,6 +474,23 @@ impl<const N: usize, const T: usize> fmt::Binary for StaticLut<N, T> {
     }
 }
 
+impl<const N: usize, const T: usize> TryFrom<Lut> for StaticLut<N, T> {
+    type Error = ();
+
+    fn try_from(lut: Lut) -> Result<Self, Self::Error> {
+        if lut.num_vars() != N {
+            return Err(());
+        }
+        Ok(StaticLut::<N, T>::from_blocks(lut.blocks()))
+    }
+}
+
+impl<const N: usize, const T: usize> From<StaticLut<N, T>> for Lut {
+    fn from(lut: StaticLut<N, T>) -> Lut {
+        Lut::from_blocks(lut.num_vars(), lut.blocks())
+    }
+}
+
 /// 0-input Lut
 #[doc(hidden)]
 pub type Lut0 = StaticLut<0, 1>;
@@ -487,7 +522,7 @@ pub type Lut12 = StaticLut<12, 64>;
 
 #[cfg(test)]
 mod tests {
-    use crate::{Lut0, Lut1, Lut2, Lut3, Lut4, Lut5, Lut6, Lut7};
+    use crate::{Lut0, Lut1, Lut2, Lut3, Lut4};
 
     #[test]
     fn test_symmetric() {
@@ -516,6 +551,7 @@ mod tests {
     #[test]
     #[cfg(feature = "rand")]
     fn test_random() {
+        use crate::{Lut5, Lut6, Lut7};
         Lut0::random();
         Lut1::random();
         Lut2::random();
@@ -524,5 +560,19 @@ mod tests {
         Lut5::random();
         Lut6::random();
         Lut7::random();
+    }
+
+    #[test]
+    #[cfg(feature = "rand")]
+    fn test_conversion() {
+        use crate::{Lut, Lut7};
+        for _ in 0..10 {
+            let lut = Lut3::random();
+            assert_eq!(lut, Lut3::try_from(Lut::from(lut)).unwrap());
+        }
+        for _ in 0..10 {
+            let lut = Lut7::random();
+            assert_eq!(lut, Lut7::try_from(Lut::from(lut)).unwrap());
+        }
     }
 }
