@@ -751,6 +751,48 @@ mod tests {
     }
 
     #[test]
+    fn test_mux_decomposition() {
+        for i in 3..=8 {
+            for a in 0..i {
+                for b in 0..i {
+                    for s in 0..i {
+                        if (a != b) && (a != s) && (b != s) {
+                            let ai = Lut::nth_var(i, a);
+                            let bi = Lut::nth_var(i, b);
+                            let si = Lut::nth_var(i, s);
+                            let mux = Lut::and(&ai, &si) | Lut::and(&bi, &si.not());
+                            assert!(mux.decomposition(a) == DecompositionType::None);
+                            assert!(mux.decomposition(b) == DecompositionType::None);
+                            assert!(mux.decomposition(s) == DecompositionType::None);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_maj_decomposition() {
+        for i in 3..=8 {
+            for a in 0..i {
+                for b in 0..i {
+                    for c in 0..i {
+                        if (a != b) && (a != c) && (b != c) {
+                            let ai = Lut::nth_var(i, a);
+                            let bi = Lut::nth_var(i, b);
+                            let ci = Lut::nth_var(i, c);
+                            let maj = Lut::and(&ai, &ci) | Lut::and(&ai, &bi) | Lut::and(&bi, &ci);
+                            assert!(maj.decomposition(a) == DecompositionType::None);
+                            assert!(maj.decomposition(b) == DecompositionType::None);
+                            assert!(maj.decomposition(c) == DecompositionType::None);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
     fn test_cofactors() {
         for i in 0..=8 {
             for v1 in 1..i {
