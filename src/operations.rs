@@ -491,6 +491,10 @@ pub enum DecompositionType {
     None,
     /// The function is independent of this variable
     Independent,
+    /// The function returns this variable
+    Identity,
+    /// The function returns the negation of this variable
+    Negation,
     /// Decomposition possible as And
     And,
     /// Decomposition possible as Or
@@ -513,6 +517,10 @@ pub fn decomposition(num_vars: usize, table: &[u64], ind: usize) -> Decompositio
 
     if indep {
         DecompositionType::Independent
+    } else if and && or {
+        DecompositionType::Identity
+    } else if nand && nor {
+        DecompositionType::Negation
     } else if and {
         DecompositionType::And
     } else if or {

@@ -793,6 +793,17 @@ mod tests {
     }
 
     #[test]
+    fn test_single_var_decomposition() {
+        for i in 1..=8 {
+            for v in 0..i {
+                let lut = Lut::nth_var(i, v);
+                assert_eq!(lut.decomposition(v), DecompositionType::Identity);
+                assert_eq!(lut.not().decomposition(v), DecompositionType::Negation);
+            }
+        }
+    }
+
+    #[test]
     fn test_cofactors() {
         for i in 0..=8 {
             for v1 in 1..i {
