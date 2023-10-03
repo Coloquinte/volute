@@ -8,6 +8,17 @@ They provide logical operators and utility functions for analysis, canonization 
 
 API and documentation try to follow the same terminology as the C++ library [Kitty](https://libkitty.readthedocs.io/en/latest).
 
+# Usage
+
+Add this to your `Cargo.toml`:
+
+```toml
+[dependencies]
+  volute = "1"
+```
+
+See [the documentation](https://docs.rs/volute/latest/volute/) for more information.
+
 # Examples
 
 Create a constant-one Lut with five variables.
