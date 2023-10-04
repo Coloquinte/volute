@@ -492,10 +492,8 @@ impl<const N: usize, const T: usize> From<StaticLut<N, T>> for Lut {
 }
 
 /// 0-input Lut
-#[doc(hidden)]
 pub type Lut0 = StaticLut<0, 1>;
 /// 1-input Lut
-#[doc(hidden)]
 pub type Lut1 = StaticLut<1, 1>;
 /// 2-input Lut
 pub type Lut2 = StaticLut<2, 1>;
