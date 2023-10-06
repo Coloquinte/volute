@@ -338,12 +338,7 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
 
             // Count the non-trivial functions
             for c in level.iter() {
-                let ignored = [
-                    DecompositionType::Independent,
-                    DecompositionType::Identity,
-                    DecompositionType::Negation,
-                ];
-                if !ignored.contains(&c.decomposition(i)) {
+                if !c.decomposition(i).is_trivial() {
                     count += 1;
                 }
             }
