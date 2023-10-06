@@ -520,7 +520,7 @@ pub type Lut12 = StaticLut<12, 64>;
 
 #[cfg(test)]
 mod tests {
-    use crate::{Lut0, Lut1, Lut2, Lut3, Lut4};
+    use crate::{Lut0, Lut1, Lut2, Lut3, Lut4, Lut5, Lut6, Lut7};
 
     #[test]
     fn test_symmetric() {
@@ -544,12 +544,25 @@ mod tests {
         assert_eq!(format!("{:}", Lut2::one()), "Lut2(f)");
         assert_eq!(format!("{:}", Lut3::zero()), "Lut3(00)");
         assert_eq!(format!("{:}", Lut3::one()), "Lut3(ff)");
+        assert_eq!(format!("{:}", Lut4::zero()), "Lut4(0000)");
+        assert_eq!(format!("{:}", Lut4::one()), "Lut4(ffff)");
+        assert_eq!(format!("{:}", Lut5::zero()), "Lut5(00000000)");
+        assert_eq!(format!("{:}", Lut5::one()), "Lut5(ffffffff)");
+        assert_eq!(format!("{:}", Lut6::zero()), "Lut6(0000000000000000)");
+        assert_eq!(format!("{:}", Lut6::one()), "Lut6(ffffffffffffffff)");
+        assert_eq!(
+            format!("{:}", Lut7::zero()),
+            "Lut7(00000000000000000000000000000000)"
+        );
+        assert_eq!(
+            format!("{:}", Lut7::one()),
+            "Lut7(ffffffffffffffffffffffffffffffff)"
+        );
     }
 
     #[test]
     #[cfg(feature = "rand")]
     fn test_random() {
-        use crate::{Lut5, Lut6, Lut7};
         Lut0::random();
         Lut1::random();
         Lut2::random();
