@@ -507,6 +507,28 @@ pub enum DecompositionType {
     Xor,
 }
 
+impl DecompositionType {
+    /// Returns whether the decomposition is trivial (independent, x or !x)
+    pub fn is_trivial(&self) -> bool {
+        [Self::Independent, Self::Identity, Self::Negation].contains(self)
+    }
+
+    /// Returns whether the decomposition is based on an and gate or similar
+    pub fn is_and_type(&self) -> bool {
+        [Self::And, Self::Or, Self::Nand, Self::Nor].contains(self)
+    }
+
+    /// Returns whether the decomposition is based on a xor gate
+    pub fn is_xor_type(&self) -> bool {
+        [Self::Xor].contains(self)
+    }
+
+    /// Returns whether the decomposition is based on any 2-input gate
+    pub fn is_simple_gate(&self) -> bool {
+        [Self::And, Self::Or, Self::Nand, Self::Nor, Self::Xor].contains(self)
+    }
+}
+
 pub fn decomposition(num_vars: usize, table: &[u64], ind: usize) -> DecompositionType {
     let indep: bool = input_independent(num_vars, table, ind);
     let and = input_and(num_vars, table, ind);
