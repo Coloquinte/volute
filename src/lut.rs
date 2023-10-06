@@ -11,6 +11,7 @@ use std::ops::Not;
 use crate::canonization::n_canonization;
 use crate::canonization::npn_canonization;
 use crate::canonization::p_canonization;
+use crate::decomposition::*;
 use crate::operations::*;
 
 /// Arbitrary-size truth table
@@ -510,7 +511,7 @@ impl fmt::Binary for Lut {
 mod tests {
     use std::collections::HashSet;
 
-    use crate::{operations::DecompositionType, Lut};
+    use crate::{decomposition::DecompositionType, Lut};
 
     #[test]
     fn test_basic_logic() {

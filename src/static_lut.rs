@@ -11,6 +11,7 @@ use std::ops::Not;
 use crate::canonization::n_canonization;
 use crate::canonization::npn_canonization;
 use crate::canonization::p_canonization;
+use crate::decomposition::*;
 use crate::operations::*;
 use crate::Lut;
 

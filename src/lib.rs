@@ -47,12 +47,13 @@ print!("{}", lut);
 //! ```
 
 mod canonization;
+mod decomposition;
 mod lut;
 mod operations;
 mod static_lut;
 
+pub use decomposition::DecompositionType;
 pub use lut::Lut;
-pub use operations::DecompositionType;
 pub use static_lut::StaticLut;
 
 pub use static_lut::{
