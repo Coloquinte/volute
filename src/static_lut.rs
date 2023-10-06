@@ -314,6 +314,51 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
             ok: true,
         }
     }
+
+    /// Compute the complexity of the BDD associated with multiple functions
+    pub fn bdd_complexity(luts: &[Self]) -> usize {
+        let mut level: Vec<Self> = luts.into();
+        let mut count: usize = 0;
+
+        for i in (1..N).rev() {
+            // Deduplicate functions that are identical or complement, and remove constants
+            level = level
+                .iter()
+                .map(|c: &Self| -> Self {
+                    if c.get_bit(0) {
+                        !c
+                    } else {
+                        *c
+                    }
+                })
+                .filter(|c: &Self| -> bool { *c != Self::zero() })
+                .collect();
+            level.sort();
+            level.dedup();
+
+            // Count the non-trivial functions
+            for c in level.iter() {
+                let ignored = [
+                    DecompositionType::Independent,
+                    DecompositionType::Identity,
+                    DecompositionType::Negation,
+                ];
+                if !ignored.contains(&c.decomposition(i)) {
+                    count += 1;
+                }
+            }
+
+            // Go to the next level
+            let mut next_level = Vec::<Self>::new();
+            for c in level.iter() {
+                let (c0, c1) = c.cofactors(i);
+                next_level.push(c0);
+                next_level.push(c1);
+            }
+            level = next_level.clone();
+        }
+        count
+    }
 }
 
 #[doc(hidden)]
@@ -584,6 +629,62 @@ mod tests {
         for _ in 0..10 {
             let lut = Lut7::random();
             assert_eq!(lut, Lut7::try_from(Lut::from(lut)).unwrap());
+        }
+    }
+
+    #[test]
+    fn test_bdd() {
+        // Check constant Luts
+        assert_eq!(Lut7::bdd_complexity(&[Lut7::zero()]), 0usize);
+        assert_eq!(Lut7::bdd_complexity(&[Lut7::one()]), 0usize);
+
+        // Check trivial Luts
+        for i in 0..4 {
+            assert_eq!(Lut7::bdd_complexity(&[Lut7::nth_var(i)]), 0usize);
+            assert_eq!(Lut7::bdd_complexity(&[!Lut7::nth_var(i)]), 0usize);
+        }
+        for i in 0..7 {
+            for j in i + 1..7 {
+                let vi = Lut7::nth_var(i);
+                let vj = Lut7::nth_var(j);
+                assert_eq!(Lut7::bdd_complexity(&[vi & vj]), 1usize);
+                assert_eq!(Lut7::bdd_complexity(&[!vi & vj]), 1usize);
+                assert_eq!(Lut7::bdd_complexity(&[vi & !vj]), 1usize);
+                assert_eq!(Lut7::bdd_complexity(&[!vi & !vj]), 1usize);
+                assert_eq!(Lut7::bdd_complexity(&[vi | vj]), 1usize);
+                assert_eq!(Lut7::bdd_complexity(&[!vi | vj]), 1usize);
+                assert_eq!(Lut7::bdd_complexity(&[vi | !vj]), 1usize);
+                assert_eq!(Lut7::bdd_complexity(&[!vi | !vj]), 1usize);
+                assert_eq!(Lut7::bdd_complexity(&[vi ^ vj]), 1usize);
+                assert_eq!(Lut7::bdd_complexity(&[!vi ^ vj]), 1usize);
+            }
+        }
+
+        for i in 0..5 {
+            for j in i + 1..6 {
+                for k in j + 1..7 {
+                    let vi = Lut7::nth_var(i);
+                    let vj = Lut7::nth_var(j);
+                    let vk = Lut7::nth_var(k);
+                    assert_eq!(Lut7::bdd_complexity(&[vi & vj & vk]), 2usize);
+                    assert_eq!(Lut7::bdd_complexity(&[vi ^ vj & vk]), 2usize);
+                    assert_eq!(Lut7::bdd_complexity(&[vi ^ vj | vk]), 2usize);
+                    assert_eq!(Lut7::bdd_complexity(&[vi & vj | vk]), 2usize);
+                }
+            }
+        }
+
+        for i in 0..5 {
+            for j in i + 1..6 {
+                for k in j + 1..7 {
+                    let vi = Lut7::nth_var(i);
+                    let vj = Lut7::nth_var(j);
+                    let vk = Lut7::nth_var(k);
+                    assert_eq!(Lut7::bdd_complexity(&[(vk & vj) | (!vk & vi)]), 1usize);
+                    assert_eq!(Lut7::bdd_complexity(&[(vj & vk) | (!vj & vi)]), 3usize);
+                    assert_eq!(Lut7::bdd_complexity(&[(vi & vk) | (!vi & vj)]), 3usize);
+                }
+            }
         }
     }
 }
