@@ -1,9 +1,9 @@
-pub fn level_complexity( table: &[u64], level: usize) -> usize {
-    assert!(level <= 6);
-    assert!(level >= 2);
+pub fn level_complexity(table: &[u64], level: usize) -> usize {
+    assert!(level < 6);
+    assert!(level >= 1);
 
     // Gather the Luts at this level and normalize
-    let shift = 1 << level;
+    let shift = 1 << (level + 1);
     let mask = !0u64 >> (64 - shift);
     let mut luts = Vec::<u64>::new();
     for t in table {
@@ -17,26 +17,28 @@ pub fn level_complexity( table: &[u64], level: usize) -> usize {
             if lut != 0 {
                 luts.push(lut);
             }
-            c >>= shift;
+            if level < 5 {
+                c >>= shift;
+            }
         }
     }
 
     // Filter to only keep non-trivial ones
-    let mid_shift = 1 << (level - 1);
+    let mid_shift = 1 << level;
     let mid_mask = !0u64 >> (64 - mid_shift);
-    luts.retain(|c: &u64| -> bool { 
+    luts.retain(|c: &u64| -> bool {
         let h = c >> mid_shift;
         let l = c & mid_mask;
         if l == h {
             // Independent from this variable
             return false;
         }
-        if l == !h && (l == 0 || h == 0) {
+        if l == (!h & mid_mask) && (l == 0 || h == 0) {
             // Direct copy of this variable
             return false;
         }
         true
-     });
+    });
 
     // Sort-uniquify
     luts.sort();
@@ -44,10 +46,12 @@ pub fn level_complexity( table: &[u64], level: usize) -> usize {
     luts.len()
 }
 
-pub fn table_complexity(num_vars: usize, table: &[u64])  -> usize{
+pub fn table_complexity(num_vars: usize, table: &[u64]) -> usize {
     let mut complexity: usize = 0;
-    for level in 2..6 {
-        if level >= num_vars { return complexity; }
+    for level in 1..6 {
+        if level >= num_vars {
+            return complexity;
+        }
         complexity += level_complexity(table, level);
     }
     complexity
