@@ -8,6 +8,7 @@ use std::ops::BitXor;
 use std::ops::BitXorAssign;
 use std::ops::Not;
 
+use crate::bdd::*;
 use crate::canonization::n_canonization;
 use crate::canonization::npn_canonization;
 use crate::canonization::p_canonization;
@@ -314,6 +315,15 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
             lut: StaticLut::zero(),
             ok: true,
         }
+    }
+
+    /// Compute the complexity of the BDD associated with multiple functions
+    pub fn bdd_complexity(luts: &[Self]) -> usize {
+        let mut table = Vec::<u64>::new();
+        for l in luts {
+            table.extend(l.blocks().iter());
+        }
+        table_complexity(N, table.as_slice())
     }
 }
 

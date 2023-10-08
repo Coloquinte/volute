@@ -334,7 +334,7 @@ impl Lut {
     }
 
     /// Compute the complexity of the BDD associated with multiple functions
-    pub fn bdd_complexity_2(luts: &[Self]) -> usize {
+    pub fn bdd_complexity(luts: &[Self]) -> usize {
         if luts.is_empty() {
             return 0;
         }
@@ -348,57 +348,6 @@ impl Lut {
             table.extend(l.blocks().iter());
         }
         table_complexity(num_vars, table.as_slice())
-    }
-
-    /// Compute the complexity of the BDD associated with multiple functions
-    pub fn bdd_complexity(luts: &[Self]) -> usize {
-        if luts.is_empty() {
-            return 0;
-        }
-        let num_vars = luts[0].num_vars();
-        for lut in luts {
-            assert_eq!(lut.num_vars(), num_vars);
-        }
-
-        let mut level: Vec<Self> = luts.into();
-        let mut count: usize = 0;
-
-        for i in (1..num_vars).rev() {
-            // Deduplicate functions that are identical or complement, and remove constants
-            level = level
-                .iter()
-                .map(|c: &Self| -> Self {
-                    if c.get_bit(0) {
-                        !c
-                    } else {
-                        c.clone()
-                    }
-                })
-                .filter(|c: &Self| -> bool { *c != Self::zero(num_vars) })
-                .collect();
-            level.sort();
-            level.dedup();
-
-            // Count the non-trivial functions
-            for c in level.iter() {
-                if !c.decomposition(i).is_trivial() {
-                    count += 1;
-                }
-            }
-
-            // Go to the next level
-            let mut next_level = Vec::<Self>::new();
-            for c in level.iter() {
-                let (c0, c1) = c.cofactors(i);
-                next_level.push(c0);
-                next_level.push(c1);
-            }
-            level = next_level.clone();
-        }
-        if num_vars <= 6 {
-            assert_eq!(count, Self::bdd_complexity_2(luts));
-        }
-        count
     }
 }
 
@@ -925,32 +874,81 @@ mod tests {
         }
     }
 
+    /// Compute the complexity of the BDD associated with multiple functions
+    fn bdd_complexity_check(luts: &[Lut]) -> usize {
+        if luts.is_empty() {
+            return 0;
+        }
+        let num_vars = luts[0].num_vars();
+        for lut in luts {
+            assert_eq!(lut.num_vars(), num_vars);
+        }
+
+        let mut level: Vec<Lut> = luts.into();
+        let mut count: usize = 0;
+
+        for i in (1..num_vars).rev() {
+            // Deduplicate functions that are identical or complement, and remove constants
+            level = level
+                .iter()
+                .map(|c: &Lut| -> Lut {
+                    if c.get_bit(0) {
+                        !c
+                    } else {
+                        c.clone()
+                    }
+                })
+                .filter(|c: &Lut| -> bool { *c != Lut::zero(num_vars) })
+                .collect();
+            level.sort();
+            level.dedup();
+
+            // Count the non-trivial functions
+            for c in level.iter() {
+                if !c.decomposition(i).is_trivial() {
+                    count += 1;
+                }
+            }
+
+            // Go to the next level
+            let mut next_level = Vec::<Lut>::new();
+            for c in level.iter() {
+                let (c0, c1) = c.cofactors(i);
+                next_level.push(c0);
+                next_level.push(c1);
+            }
+            level = next_level.clone();
+        }
+        assert_eq!(count, Lut::bdd_complexity(luts));
+        count
+    }
+
     #[test]
     fn test_bdd() {
-        for num_vars in 0..8 {
+        for num_vars in 0..9 {
             // Check constant Luts
-            assert_eq!(Lut::bdd_complexity(&[Lut::zero(num_vars)]), 0usize);
-            assert_eq!(Lut::bdd_complexity(&[Lut::one(num_vars)]), 0usize);
+            assert_eq!(bdd_complexity_check(&[Lut::zero(num_vars)]), 0usize);
+            assert_eq!(bdd_complexity_check(&[Lut::one(num_vars)]), 0usize);
 
             // Check trivial Luts
             for i in 0..num_vars {
-                assert_eq!(Lut::bdd_complexity(&[Lut::nth_var(num_vars, i)]), 0usize);
-                assert_eq!(Lut::bdd_complexity(&[!Lut::nth_var(num_vars, i)]), 0usize);
+                assert_eq!(bdd_complexity_check(&[Lut::nth_var(num_vars, i)]), 0usize);
+                assert_eq!(bdd_complexity_check(&[!Lut::nth_var(num_vars, i)]), 0usize);
             }
             for i in 0..num_vars {
                 for j in i + 1..num_vars {
                     let vi = Lut::nth_var(num_vars, i);
                     let vj = Lut::nth_var(num_vars, j);
-                    assert_eq!(Lut::bdd_complexity(&[vi.clone() & vj.clone()]), 1usize);
-                    assert_eq!(Lut::bdd_complexity(&[!vi.clone() & vj.clone()]), 1usize);
-                    assert_eq!(Lut::bdd_complexity(&[vi.clone() & !vj.clone()]), 1usize);
-                    assert_eq!(Lut::bdd_complexity(&[!vi.clone() & !vj.clone()]), 1usize);
-                    assert_eq!(Lut::bdd_complexity(&[vi.clone() | vj.clone()]), 1usize);
-                    assert_eq!(Lut::bdd_complexity(&[!vi.clone() | vj.clone()]), 1usize);
-                    assert_eq!(Lut::bdd_complexity(&[vi.clone() | !vj.clone()]), 1usize);
-                    assert_eq!(Lut::bdd_complexity(&[!vi.clone() | !vj.clone()]), 1usize);
-                    assert_eq!(Lut::bdd_complexity(&[vi.clone() ^ vj.clone()]), 1usize);
-                    assert_eq!(Lut::bdd_complexity(&[!vi.clone() ^ vj.clone()]), 1usize);
+                    assert_eq!(bdd_complexity_check(&[vi.clone() & vj.clone()]), 1usize);
+                    assert_eq!(bdd_complexity_check(&[!vi.clone() & vj.clone()]), 1usize);
+                    assert_eq!(bdd_complexity_check(&[vi.clone() & !vj.clone()]), 1usize);
+                    assert_eq!(bdd_complexity_check(&[!vi.clone() & !vj.clone()]), 1usize);
+                    assert_eq!(bdd_complexity_check(&[vi.clone() | vj.clone()]), 1usize);
+                    assert_eq!(bdd_complexity_check(&[!vi.clone() | vj.clone()]), 1usize);
+                    assert_eq!(bdd_complexity_check(&[vi.clone() | !vj.clone()]), 1usize);
+                    assert_eq!(bdd_complexity_check(&[!vi.clone() | !vj.clone()]), 1usize);
+                    assert_eq!(bdd_complexity_check(&[vi.clone() ^ vj.clone()]), 1usize);
+                    assert_eq!(bdd_complexity_check(&[!vi.clone() ^ vj.clone()]), 1usize);
                 }
             }
 
@@ -961,19 +959,19 @@ mod tests {
                         let vj = Lut::nth_var(num_vars, j);
                         let vk = Lut::nth_var(num_vars, k);
                         assert_eq!(
-                            Lut::bdd_complexity(&[vi.clone() & vj.clone() & vk.clone()]),
+                            bdd_complexity_check(&[vi.clone() & vj.clone() & vk.clone()]),
                             2usize
                         );
                         assert_eq!(
-                            Lut::bdd_complexity(&[vi.clone() ^ vj.clone() & vk.clone()]),
+                            bdd_complexity_check(&[vi.clone() ^ vj.clone() & vk.clone()]),
                             2usize
                         );
                         assert_eq!(
-                            Lut::bdd_complexity(&[vi.clone() ^ vj.clone() | vk.clone()]),
+                            bdd_complexity_check(&[vi.clone() ^ vj.clone() | vk.clone()]),
                             2usize
                         );
                         assert_eq!(
-                            Lut::bdd_complexity(&[vi.clone() & vj.clone() | vk.clone()]),
+                            bdd_complexity_check(&[vi.clone() & vj.clone() | vk.clone()]),
                             2usize
                         );
                     }
@@ -987,19 +985,19 @@ mod tests {
                         let vj = Lut::nth_var(num_vars, j);
                         let vk = Lut::nth_var(num_vars, k);
                         assert_eq!(
-                            Lut::bdd_complexity(&[
+                            bdd_complexity_check(&[
                                 (vk.clone() & vj.clone()) | (!vk.clone() & vi.clone())
                             ]),
                             1usize
                         );
                         assert_eq!(
-                            Lut::bdd_complexity(&[
+                            bdd_complexity_check(&[
                                 (vj.clone() & vk.clone()) | (!vj.clone() & vi.clone())
                             ]),
                             3usize
                         );
                         assert_eq!(
-                            Lut::bdd_complexity(&[
+                            bdd_complexity_check(&[
                                 (vi.clone() & vk.clone()) | (!vi.clone() & vj.clone())
                             ]),
                             3usize
