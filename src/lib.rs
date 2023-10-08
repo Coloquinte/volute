@@ -46,6 +46,7 @@ print!("{}", lut);
 //! assert_eq!(format!("{:b}", lut), "Lut3(10010110)");
 //! ```
 
+mod bdd;
 mod canonization;
 mod decomposition;
 mod lut;
