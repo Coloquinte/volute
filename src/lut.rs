@@ -9,9 +9,7 @@ use std::ops::BitXorAssign;
 use std::ops::Not;
 
 use crate::bdd::*;
-use crate::canonization::n_canonization;
-use crate::canonization::npn_canonization;
-use crate::canonization::p_canonization;
+use crate::canonization::*;
 use crate::decomposition::*;
 use crate::operations::*;
 
@@ -333,7 +331,10 @@ impl Lut {
         }
     }
 
-    /// Compute the complexity of the BDD associated with multiple functions
+    /// Compute the number of nodes in the BDD representing these functions
+    ///
+    /// This function uses the natural variable order (0 to num_vars) to build the BDD.
+    /// This may not be the smallest possible BDD.
     pub fn bdd_complexity(luts: &[Self]) -> usize {
         if luts.is_empty() {
             return 0;
@@ -874,7 +875,6 @@ mod tests {
         }
     }
 
-    /// Compute the complexity of the BDD associated with multiple functions
     fn bdd_complexity_check(luts: &[Lut]) -> usize {
         if luts.is_empty() {
             return 0;
