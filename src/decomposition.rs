@@ -84,10 +84,10 @@ pub enum DecompositionType {
     And,
     /// Decomposition possible as Or
     Or,
-    /// Decomposition possible as Nand
-    Nand,
-    /// Decomposition possible as Nor
-    Nor,
+    /// Decomposition possible as Less-Or-Equal (equivalent to Nand for an output)
+    Le,
+    /// Decomposition possible as Less-Than (equivalent to Nor for an output)
+    Lt,
     /// Decomposition possible as Xor
     Xor,
 }
@@ -100,7 +100,7 @@ impl DecompositionType {
 
     /// Returns whether the decomposition is based on an and gate or similar
     pub fn is_and_type(&self) -> bool {
-        [Self::And, Self::Or, Self::Nand, Self::Nor].contains(self)
+        [Self::And, Self::Or, Self::Le, Self::Lt].contains(self)
     }
 
     /// Returns whether the decomposition is based on a xor gate
@@ -110,11 +110,11 @@ impl DecompositionType {
 
     /// Returns whether the decomposition is based on any 2-input gate
     pub fn is_simple_gate(&self) -> bool {
-        [Self::And, Self::Or, Self::Nand, Self::Nor, Self::Xor].contains(self)
+        [Self::And, Self::Or, Self::Le, Self::Lt, Self::Xor].contains(self)
     }
 }
 
-pub fn decomposition(num_vars: usize, table: &[u64], ind: usize) -> DecompositionType {
+pub fn top_decomposition(num_vars: usize, table: &[u64], ind: usize) -> DecompositionType {
     let indep: bool = input_independent(num_vars, table, ind);
     let and = input_and(num_vars, table, ind);
     let or = input_or(num_vars, table, ind);
@@ -133,9 +133,9 @@ pub fn decomposition(num_vars: usize, table: &[u64], ind: usize) -> Decompositio
     } else if or {
         DecompositionType::Or
     } else if nand {
-        DecompositionType::Nand
+        DecompositionType::Le
     } else if nor {
-        DecompositionType::Nor
+        DecompositionType::Lt
     } else if xor {
         DecompositionType::Xor
     } else {

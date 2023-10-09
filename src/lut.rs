@@ -308,9 +308,9 @@ impl Lut {
         (ret, perm, flip)
     }
 
-    /// Decomposition of the function with respect to this variable
-    pub fn decomposition(&self, ind: usize) -> DecompositionType {
-        decomposition(self.num_vars, self.table.as_ref(), ind)
+    /// Top decomposition of the function with respect to this variable
+    pub fn top_decomposition(&self, ind: usize) -> DecompositionType {
+        top_decomposition(self.num_vars, self.table.as_ref(), ind)
     }
 
     /// Returns whether the function is positive unate
@@ -817,12 +817,12 @@ mod tests {
                     let xnor = !&xor;
                     for v in 0..i {
                         if v == v1 || v == v2 {
-                            assert_eq!(and.decomposition(v), DecompositionType::And);
-                            assert_eq!(or.decomposition(v), DecompositionType::Or);
-                            assert_eq!(nand.decomposition(v), DecompositionType::Nand);
-                            assert_eq!(nor.decomposition(v), DecompositionType::Nor);
-                            assert_eq!(xor.decomposition(v), DecompositionType::Xor);
-                            assert_eq!(xnor.decomposition(v), DecompositionType::Xor);
+                            assert_eq!(and.top_decomposition(v), DecompositionType::And);
+                            assert_eq!(or.top_decomposition(v), DecompositionType::Or);
+                            assert_eq!(nand.top_decomposition(v), DecompositionType::Le);
+                            assert_eq!(nor.top_decomposition(v), DecompositionType::Lt);
+                            assert_eq!(xor.top_decomposition(v), DecompositionType::Xor);
+                            assert_eq!(xnor.top_decomposition(v), DecompositionType::Xor);
                             assert!(and.is_pos_unate(v));
                             assert!(or.is_pos_unate(v));
                             assert!(!and.is_neg_unate(v));
@@ -837,7 +837,7 @@ mod tests {
                             assert!(!xnor.is_neg_unate(v));
                         } else {
                             for l in [&l1, &l2, &and, &or, &nand, &nor, &xor, &xnor] {
-                                assert_eq!(l.decomposition(v), DecompositionType::Independent);
+                                assert_eq!(l.top_decomposition(v), DecompositionType::Independent);
                                 assert!(l.is_pos_unate(v));
                                 assert!(l.is_neg_unate(v));
                             }
@@ -859,9 +859,9 @@ mod tests {
                             let bi = Lut::nth_var(i, b);
                             let si = Lut::nth_var(i, s);
                             let mux = Lut::and(&ai, &si) | Lut::and(&bi, &si.not());
-                            assert!(mux.decomposition(a) == DecompositionType::None);
-                            assert!(mux.decomposition(b) == DecompositionType::None);
-                            assert!(mux.decomposition(s) == DecompositionType::None);
+                            assert!(mux.top_decomposition(a) == DecompositionType::None);
+                            assert!(mux.top_decomposition(b) == DecompositionType::None);
+                            assert!(mux.top_decomposition(s) == DecompositionType::None);
                         }
                     }
                 }
@@ -880,9 +880,9 @@ mod tests {
                             let bi = Lut::nth_var(i, b);
                             let ci = Lut::nth_var(i, c);
                             let maj = Lut::and(&ai, &ci) | Lut::and(&ai, &bi) | Lut::and(&bi, &ci);
-                            assert!(maj.decomposition(a) == DecompositionType::None);
-                            assert!(maj.decomposition(b) == DecompositionType::None);
-                            assert!(maj.decomposition(c) == DecompositionType::None);
+                            assert!(maj.top_decomposition(a) == DecompositionType::None);
+                            assert!(maj.top_decomposition(b) == DecompositionType::None);
+                            assert!(maj.top_decomposition(c) == DecompositionType::None);
                         }
                     }
                 }
@@ -895,8 +895,8 @@ mod tests {
         for i in 1..=8 {
             for v in 0..i {
                 let lut = Lut::nth_var(i, v);
-                assert_eq!(lut.decomposition(v), DecompositionType::Identity);
-                assert_eq!(lut.not().decomposition(v), DecompositionType::Negation);
+                assert_eq!(lut.top_decomposition(v), DecompositionType::Identity);
+                assert_eq!(lut.not().top_decomposition(v), DecompositionType::Negation);
             }
         }
     }
@@ -983,7 +983,7 @@ mod tests {
 
             // Count the non-trivial functions
             for c in level.iter() {
-                if !c.decomposition(i).is_trivial() {
+                if !c.top_decomposition(i).is_trivial() {
                     count += 1;
                 }
             }

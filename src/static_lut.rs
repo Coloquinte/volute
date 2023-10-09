@@ -292,9 +292,9 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
         (ret, perm, flip)
     }
 
-    /// Decomposition of the function with respect to this variable
-    pub fn decomposition(&self, ind: usize) -> DecompositionType {
-        decomposition(N, self.table.as_ref(), ind)
+    /// Top decomposition of the function with respect to this variable
+    pub fn top_decomposition(&self, ind: usize) -> DecompositionType {
+        top_decomposition(N, self.table.as_ref(), ind)
     }
 
     /// Returns whether the function is positive unate
