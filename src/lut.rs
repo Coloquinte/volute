@@ -403,7 +403,7 @@ impl Not for Lut {
     }
 }
 
-impl Not for &'_ Lut {
+impl Not for &Lut {
     type Output = Lut;
     fn not(self) -> Self::Output {
         let mut l = self.clone();
@@ -419,8 +419,8 @@ impl BitAndAssign for Lut {
     }
 }
 
-impl<'a> BitAndAssign<&'a Lut> for Lut {
-    fn bitand_assign(&mut self, rhs: &'a Lut) {
+impl BitAndAssign<&Lut> for Lut {
+    fn bitand_assign(&mut self, rhs: &Lut) {
         assert!(self.num_vars == rhs.num_vars);
         and_inplace(self.table.as_mut(), rhs.table.as_ref());
     }
@@ -435,9 +435,9 @@ impl BitAnd for Lut {
     }
 }
 
-impl<'a, 'b> BitAnd<&'b Lut> for &'a Lut {
+impl BitAnd<&Lut> for &Lut {
     type Output = Lut;
-    fn bitand(self, rhs: &'b Lut) -> Self::Output {
+    fn bitand(self, rhs: &Lut) -> Self::Output {
         let mut l = self.clone();
         l &= rhs;
         l
@@ -451,8 +451,8 @@ impl BitOrAssign for Lut {
     }
 }
 
-impl<'a> BitOrAssign<&'a Lut> for Lut {
-    fn bitor_assign(&mut self, rhs: &'a Lut) {
+impl BitOrAssign<&Lut> for Lut {
+    fn bitor_assign(&mut self, rhs: &Lut) {
         assert!(self.num_vars == rhs.num_vars);
         or_inplace(self.table.as_mut(), rhs.table.as_ref());
     }
@@ -467,7 +467,7 @@ impl BitOr for Lut {
     }
 }
 
-impl BitOr for &'_ Lut {
+impl BitOr for &Lut {
     type Output = Lut;
     fn bitor(self, rhs: Self) -> Self::Output {
         let mut l = self.clone();
@@ -483,8 +483,8 @@ impl BitXorAssign for Lut {
     }
 }
 
-impl<'a> BitXorAssign<&'a Lut> for Lut {
-    fn bitxor_assign(&mut self, rhs: &'a Lut) {
+impl BitXorAssign<&Lut> for Lut {
+    fn bitxor_assign(&mut self, rhs: &Lut) {
         assert!(self.num_vars == rhs.num_vars);
         xor_inplace(self.table.as_mut(), rhs.table.as_ref());
     }
@@ -499,7 +499,7 @@ impl BitXor for Lut {
     }
 }
 
-impl BitXor for &'_ Lut {
+impl BitXor for &Lut {
     type Output = Lut;
     fn bitxor(self, rhs: Self) -> Self::Output {
         let mut l = self.clone();
