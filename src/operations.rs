@@ -119,23 +119,23 @@ pub fn fill_nth_var(num_vars: usize, table: &mut [u64], ind: usize) {
         }
     } else {
         let mask = 1 << (ind - 6);
-        for i in 0..table.len() {
-            table[i] = if i & mask != 0 { !0u64 } else { 0u64 };
+        for (i, t) in table.iter_mut().enumerate() {
+            *t = if i & mask != 0 { !0u64 } else { 0u64 };
         }
     }
 }
 
 /// Fill with a symmetric function
 pub fn fill_symmetric(num_vars: usize, table: &mut [u64], count_values: usize) {
-    for i in 0..table.len() {
+    for (i, t) in table.iter_mut().enumerate() {
         let cnt = usize::count_ones(i) as usize;
-        table[i] = 0;
-        for c in 0..=6 {
+        *t = 0;
+        for (c, mask) in COUNT_MASKS.iter().enumerate() {
             if (count_values >> (cnt + c)) & 1 != 0 {
-                table[i] |= COUNT_MASKS[c];
+                *t |= mask;
             }
         }
-        table[i] &= num_vars_mask(num_vars);
+        *t &= num_vars_mask(num_vars);
     }
 }
 
@@ -169,8 +169,8 @@ pub fn fill_majority(num_vars: usize, table: &mut [u64]) {
 #[cfg(feature = "rand")]
 pub fn fill_random(num_vars: usize, table: &mut [u64]) {
     use rand::RngCore;
-    for i in 0..table.len() {
-        table[i] &= rand::thread_rng().next_u64() & num_vars_mask(num_vars);
+    for t in table {
+        *t &= rand::thread_rng().next_u64() & num_vars_mask(num_vars);
     }
 }
 /// Get a single bit in a LUT from a mask
@@ -406,9 +406,9 @@ pub fn from_cofactors_inplace(
 pub fn next_inplace(num_vars: usize, table: &mut [u64]) -> bool {
     debug_assert_eq!(table.len(), table_size(num_vars));
     let mask = num_vars_mask(num_vars);
-    for i in 0..table.len() {
-        table[i] = (table[i] + 1) & mask;
-        if table[i] != 0 {
+    for t in table {
+        *t = (*t + 1) & mask;
+        if *t != 0 {
             return true;
         }
     }
@@ -474,8 +474,8 @@ mod tests {
         }
 
         let mut all = 0u64;
-        for i in 0..7 {
-            all |= COUNT_MASKS[i];
+        for mask in COUNT_MASKS {
+            all |= mask;
         }
         assert_eq!(all, !0u64);
     }
