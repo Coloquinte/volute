@@ -394,15 +394,6 @@ impl PartialOrd for Lut {
     }
 }
 
-impl Not for Lut {
-    type Output = Lut;
-    fn not(self) -> Self::Output {
-        let mut l = self;
-        l.not_inplace();
-        l
-    }
-}
-
 impl Not for &Lut {
     type Output = Lut;
     fn not(self) -> Self::Output {
@@ -412,10 +403,12 @@ impl Not for &Lut {
     }
 }
 
-impl BitAndAssign for Lut {
-    fn bitand_assign(&mut self, rhs: Self) {
-        assert!(self.num_vars == rhs.num_vars);
-        and_inplace(self.table.as_mut(), rhs.table.as_ref());
+impl Not for Lut {
+    type Output = Lut;
+    fn not(self) -> Self::Output {
+        let mut l = self;
+        l.not_inplace();
+        l
     }
 }
 
@@ -426,10 +419,25 @@ impl BitAndAssign<&Lut> for Lut {
     }
 }
 
-impl BitAnd for Lut {
+impl BitAndAssign<Lut> for Lut {
+    fn bitand_assign(&mut self, rhs: Lut) {
+        *self &= &rhs;
+    }
+}
+
+impl BitAnd<Lut> for Lut {
     type Output = Lut;
-    fn bitand(self, rhs: Self) -> Self::Output {
+    fn bitand(self, rhs: Lut) -> Self::Output {
         let mut l = self;
+        l &= rhs;
+        l
+    }
+}
+
+impl BitAnd<Lut> for &Lut {
+    type Output = Lut;
+    fn bitand(self, rhs: Lut) -> Self::Output {
+        let mut l = self.clone();
         l &= rhs;
         l
     }
@@ -444,10 +452,12 @@ impl BitAnd<&Lut> for &Lut {
     }
 }
 
-impl BitOrAssign for Lut {
-    fn bitor_assign(&mut self, rhs: Self) {
-        assert!(self.num_vars == rhs.num_vars);
-        or_inplace(self.table.as_mut(), rhs.table.as_ref());
+impl BitAnd<&Lut> for Lut {
+    type Output = Lut;
+    fn bitand(self, rhs: &Lut) -> Self::Output {
+        let mut l = self;
+        l &= rhs;
+        l
     }
 }
 
@@ -458,28 +468,45 @@ impl BitOrAssign<&Lut> for Lut {
     }
 }
 
-impl BitOr for Lut {
+impl BitOrAssign<Lut> for Lut {
+    fn bitor_assign(&mut self, rhs: Lut) {
+        *self |= &rhs;
+    }
+}
+
+impl BitOr<Lut> for Lut {
     type Output = Lut;
-    fn bitor(self, rhs: Self) -> Self::Output {
+    fn bitor(self, rhs: Lut) -> Self::Output {
         let mut l = self;
         l |= rhs;
         l
     }
 }
 
-impl BitOr for &Lut {
+impl BitOr<Lut> for &Lut {
     type Output = Lut;
-    fn bitor(self, rhs: Self) -> Self::Output {
+    fn bitor(self, rhs: Lut) -> Self::Output {
         let mut l = self.clone();
         l |= rhs;
         l
     }
 }
 
-impl BitXorAssign for Lut {
-    fn bitxor_assign(&mut self, rhs: Self) {
-        assert!(self.num_vars == rhs.num_vars);
-        xor_inplace(self.table.as_mut(), rhs.table.as_ref());
+impl BitOr<&Lut> for &Lut {
+    type Output = Lut;
+    fn bitor(self, rhs: &Lut) -> Self::Output {
+        let mut l = self.clone();
+        l |= rhs;
+        l
+    }
+}
+
+impl BitOr<&Lut> for Lut {
+    type Output = Lut;
+    fn bitor(self, rhs: &Lut) -> Self::Output {
+        let mut l = self;
+        l |= rhs;
+        l
     }
 }
 
@@ -490,19 +517,43 @@ impl BitXorAssign<&Lut> for Lut {
     }
 }
 
-impl BitXor for Lut {
+impl BitXorAssign<Lut> for Lut {
+    fn bitxor_assign(&mut self, rhs: Lut) {
+        *self ^= &rhs;
+    }
+}
+
+impl BitXor<Lut> for Lut {
     type Output = Lut;
-    fn bitxor(self, rhs: Self) -> Self::Output {
+    fn bitxor(self, rhs: Lut) -> Self::Output {
         let mut l = self;
         l ^= rhs;
         l
     }
 }
 
-impl BitXor for &Lut {
+impl BitXor<Lut> for &Lut {
     type Output = Lut;
-    fn bitxor(self, rhs: Self) -> Self::Output {
+    fn bitxor(self, rhs: Lut) -> Self::Output {
         let mut l = self.clone();
+        l ^= rhs;
+        l
+    }
+}
+
+impl BitXor<&Lut> for &Lut {
+    type Output = Lut;
+    fn bitxor(self, rhs: &Lut) -> Self::Output {
+        let mut l = self.clone();
+        l ^= rhs;
+        l
+    }
+}
+
+impl BitXor<&Lut> for Lut {
+    type Output = Lut;
+    fn bitxor(self, rhs: &Lut) -> Self::Output {
+        let mut l = self;
         l ^= rhs;
         l
     }
@@ -633,6 +684,33 @@ mod tests {
         assert_eq!(format!("{:b}", Lut::one(2)), "Lut2(1111)");
         assert_eq!(format!("{:b}", Lut::zero(3)), "Lut3(00000000)");
         assert_eq!(format!("{:b}", Lut::one(3)), "Lut3(11111111)");
+    }
+
+    #[test]
+    #[allow(unused_must_use, clippy::no_effect, clippy::unnecessary_operation)]
+    fn test_ops() {
+        let mut a = Lut::nth_var(6, 0);
+        let b = Lut::nth_var(6, 1);
+        !a.clone();
+        !&a;
+        &a & &b;
+        &a & b.clone();
+        a.clone() & &b;
+        a.clone() & b.clone();
+        &a | &b;
+        &a | b.clone();
+        a.clone() | &b;
+        a.clone() | b.clone();
+        &a ^ &b;
+        &a ^ b.clone();
+        a.clone() ^ &b;
+        a.clone() ^ b.clone();
+        a &= b.clone();
+        a &= &b;
+        a |= b.clone();
+        a |= &b;
+        a ^= b.clone();
+        a ^= &b;
     }
 
     #[test]

@@ -369,7 +369,7 @@ impl<const N: usize, const T: usize> Not for StaticLut<N, T> {
     }
 }
 
-impl<const N: usize, const T: usize> Not for &'_ StaticLut<N, T> {
+impl<const N: usize, const T: usize> Not for &StaticLut<N, T> {
     type Output = StaticLut<N, T>;
     fn not(self) -> Self::Output {
         let mut l = *self;
@@ -378,19 +378,19 @@ impl<const N: usize, const T: usize> Not for &'_ StaticLut<N, T> {
     }
 }
 
-impl<const N: usize, const T: usize> BitAndAssign for StaticLut<N, T> {
+impl<const N: usize, const T: usize> BitAndAssign<StaticLut<N, T>> for StaticLut<N, T> {
     fn bitand_assign(&mut self, rhs: Self) {
         and_inplace(self.table.as_mut(), rhs.table.as_ref());
     }
 }
 
-impl<'a, const N: usize, const T: usize> BitAndAssign<&'a StaticLut<N, T>> for StaticLut<N, T> {
-    fn bitand_assign(&mut self, rhs: &'a Self) {
+impl<const N: usize, const T: usize> BitAndAssign<&StaticLut<N, T>> for StaticLut<N, T> {
+    fn bitand_assign(&mut self, rhs: &Self) {
         and_inplace(self.table.as_mut(), rhs.table.as_ref());
     }
 }
 
-impl<const N: usize, const T: usize> BitAnd for StaticLut<N, T> {
+impl<const N: usize, const T: usize> BitAnd<StaticLut<N, T>> for StaticLut<N, T> {
     type Output = Self;
     fn bitand(self, rhs: Self) -> Self::Output {
         let mut l = self;
@@ -399,28 +399,46 @@ impl<const N: usize, const T: usize> BitAnd for StaticLut<N, T> {
     }
 }
 
-impl<'a, const N: usize, const T: usize> BitAnd<&'a StaticLut<N, T>> for StaticLut<N, T> {
+impl<const N: usize, const T: usize> BitAnd<&StaticLut<N, T>> for StaticLut<N, T> {
     type Output = Self;
-    fn bitand(self, rhs: &'a StaticLut<N, T>) -> Self::Output {
+    fn bitand(self, rhs: &StaticLut<N, T>) -> Self::Output {
         let mut l = self;
         l &= rhs;
         l
     }
 }
 
-impl<const N: usize, const T: usize> BitOrAssign for StaticLut<N, T> {
+impl<const N: usize, const T: usize> BitAnd<StaticLut<N, T>> for &StaticLut<N, T> {
+    type Output = StaticLut<N, T>;
+    fn bitand(self, rhs: StaticLut<N, T>) -> Self::Output {
+        let mut l = *self;
+        l &= rhs;
+        l
+    }
+}
+
+impl<const N: usize, const T: usize> BitAnd<&StaticLut<N, T>> for &StaticLut<N, T> {
+    type Output = StaticLut<N, T>;
+    fn bitand(self, rhs: &StaticLut<N, T>) -> Self::Output {
+        let mut l = *self;
+        l &= rhs;
+        l
+    }
+}
+
+impl<const N: usize, const T: usize> BitOrAssign<StaticLut<N, T>> for StaticLut<N, T> {
     fn bitor_assign(&mut self, rhs: Self) {
         or_inplace(self.table.as_mut(), rhs.table.as_ref());
     }
 }
 
-impl<'a, const N: usize, const T: usize> BitOrAssign<&'a StaticLut<N, T>> for StaticLut<N, T> {
-    fn bitor_assign(&mut self, rhs: &'a Self) {
+impl<const N: usize, const T: usize> BitOrAssign<&StaticLut<N, T>> for StaticLut<N, T> {
+    fn bitor_assign(&mut self, rhs: &Self) {
         or_inplace(self.table.as_mut(), rhs.table.as_ref());
     }
 }
 
-impl<const N: usize, const T: usize> BitOr for StaticLut<N, T> {
+impl<const N: usize, const T: usize> BitOr<StaticLut<N, T>> for StaticLut<N, T> {
     type Output = Self;
     fn bitor(self, rhs: Self) -> Self::Output {
         let mut l = self;
@@ -429,28 +447,46 @@ impl<const N: usize, const T: usize> BitOr for StaticLut<N, T> {
     }
 }
 
-impl<'a, const N: usize, const T: usize> BitOr<&'a StaticLut<N, T>> for StaticLut<N, T> {
+impl<const N: usize, const T: usize> BitOr<&StaticLut<N, T>> for StaticLut<N, T> {
     type Output = Self;
-    fn bitor(self, rhs: &'a StaticLut<N, T>) -> Self::Output {
+    fn bitor(self, rhs: &StaticLut<N, T>) -> Self::Output {
         let mut l = self;
         l |= rhs;
         l
     }
 }
 
-impl<const N: usize, const T: usize> BitXorAssign for StaticLut<N, T> {
+impl<const N: usize, const T: usize> BitOr<StaticLut<N, T>> for &StaticLut<N, T> {
+    type Output = StaticLut<N, T>;
+    fn bitor(self, rhs: StaticLut<N, T>) -> Self::Output {
+        let mut l = *self;
+        l |= rhs;
+        l
+    }
+}
+
+impl<const N: usize, const T: usize> BitOr<&StaticLut<N, T>> for &StaticLut<N, T> {
+    type Output = StaticLut<N, T>;
+    fn bitor(self, rhs: &StaticLut<N, T>) -> Self::Output {
+        let mut l = *self;
+        l |= rhs;
+        l
+    }
+}
+
+impl<const N: usize, const T: usize> BitXorAssign<StaticLut<N, T>> for StaticLut<N, T> {
     fn bitxor_assign(&mut self, rhs: Self) {
         xor_inplace(self.table.as_mut(), rhs.table.as_ref());
     }
 }
 
-impl<'a, const N: usize, const T: usize> BitXorAssign<&'a StaticLut<N, T>> for StaticLut<N, T> {
-    fn bitxor_assign(&mut self, rhs: &'a Self) {
+impl<const N: usize, const T: usize> BitXorAssign<&StaticLut<N, T>> for StaticLut<N, T> {
+    fn bitxor_assign(&mut self, rhs: &Self) {
         xor_inplace(self.table.as_mut(), rhs.table.as_ref());
     }
 }
 
-impl<const N: usize, const T: usize> BitXor for StaticLut<N, T> {
+impl<const N: usize, const T: usize> BitXor<StaticLut<N, T>> for StaticLut<N, T> {
     type Output = Self;
     fn bitxor(self, rhs: Self) -> Self::Output {
         let mut l = self;
@@ -459,10 +495,28 @@ impl<const N: usize, const T: usize> BitXor for StaticLut<N, T> {
     }
 }
 
-impl<'a, const N: usize, const T: usize> BitXor<&'a StaticLut<N, T>> for StaticLut<N, T> {
+impl<const N: usize, const T: usize> BitXor<&StaticLut<N, T>> for StaticLut<N, T> {
     type Output = Self;
-    fn bitxor(self, rhs: &'a StaticLut<N, T>) -> Self::Output {
+    fn bitxor(self, rhs: &StaticLut<N, T>) -> Self::Output {
         let mut l = self;
+        l ^= rhs;
+        l
+    }
+}
+
+impl<const N: usize, const T: usize> BitXor<StaticLut<N, T>> for &StaticLut<N, T> {
+    type Output = StaticLut<N, T>;
+    fn bitxor(self, rhs: StaticLut<N, T>) -> Self::Output {
+        let mut l = *self;
+        l ^= rhs;
+        l
+    }
+}
+
+impl<const N: usize, const T: usize> BitXor<&StaticLut<N, T>> for &StaticLut<N, T> {
+    type Output = StaticLut<N, T>;
+    fn bitxor(self, rhs: &StaticLut<N, T>) -> Self::Output {
+        let mut l = *self;
         l ^= rhs;
         l
     }
@@ -570,6 +624,38 @@ mod tests {
             format!("{:}", Lut7::one()),
             "Lut7(ffffffffffffffffffffffffffffffff)"
         );
+    }
+
+    #[test]
+    #[allow(
+        unused_must_use,
+        clippy::no_effect,
+        clippy::unnecessary_operation,
+        clippy::op_ref
+    )]
+    fn test_ops() {
+        let mut a = Lut6::nth_var(0);
+        let b = Lut6::nth_var(1);
+        !a;
+        !&a;
+        &a & &b;
+        &a & b;
+        a & &b;
+        a & b;
+        &a | &b;
+        &a | b;
+        a | &b;
+        a | b;
+        &a ^ &b;
+        &a ^ b;
+        a ^ &b;
+        a ^ b;
+        a &= b;
+        a &= &b;
+        a |= b;
+        a |= &b;
+        a ^= b;
+        a ^= &b;
     }
 
     #[test]
