@@ -88,8 +88,9 @@ pub fn num_vars_mask(num_vars: usize) -> u64 {
 }
 
 /// Size of the lookup table, in u64
-pub fn table_size(num_vars: usize) -> usize {
-    1 << (std::cmp::max(num_vars, 6) - 6)
+pub const fn table_size(num_vars: usize) -> usize {
+    let v = if num_vars > 6 { num_vars } else { 6 };
+    1 << (v - 6)
 }
 
 /// Fill with the constant one value
