@@ -39,11 +39,49 @@ impl Cube {
         self.a == 0
     }
 
+    /// Return the cube representing the nth variable
+    pub fn nth_var(var: usize) -> Cube {
+        Cube { a: 1 << (2 * var) }
+    }
+
+    /// Return the cube representing the nth variable, inverted
+    pub fn nth_var_inv(var: usize) -> Cube {
+        Cube {
+            a: 1 << (2 * var + 1),
+        }
+    }
+
+    /// Return the cube representing the nth variable, inverted
+    pub fn from_vars(pos_vars: &[usize], neg_vars: &[usize]) -> Cube {
+        let mut a = 0;
+        for p in pos_vars {
+            a |= 1 << (2 * p);
+        }
+        for p in neg_vars {
+            a |= 1 << (2 * p + 1);
+        }
+        let c = Cube { a };
+        if c.is_zero() {
+            Cube::zero()
+        } else {
+            c
+        }
+    }
+
+    /// Return the number of literals
+    pub fn num_lits(&self) -> usize {
+        if self.is_zero() {
+            0
+        } else {
+            self.a.count_ones() as usize
+        }
+    }
+
     /// Check whether the cube is a constant zero
     ///
     /// This can happen after And operations, so we check if any variable has the two bits set.
     pub fn is_zero(&self) -> bool {
-        (self.a & 0xcccc_cccc_cccc_cccc) >> 1 & self.a == 0
+        (self.a & 0xaaaa_aaaa_aaaa_aaaa) >> 1 & self.a != 0
     }
 
     /// Returns the variables that are positive in the cube
@@ -60,7 +98,6 @@ impl Cube {
 
     /// Returns whether the cube implies another. This is used for Sop simplification
     pub fn implies(&self, o: Cube) -> bool {
-        //
         self.a | o.a == self.a
     }
 
@@ -118,9 +155,9 @@ impl fmt::Display for Cube {
         let mut i = 0;
         while a != 0 {
             if a & 1 != 0 {
-                write!(f, "x{}", a)?;
+                write!(f, "x{}", i)?;
             } else if a & 2 != 0 {
-                write!(f, "!x{}", a)?;
+                write!(f, "!x{}", i)?;
             }
             i += 1;
             a >>= 2;
@@ -202,5 +239,72 @@ impl fmt::Display for Sop {
             .collect::<Vec<_>>()
             .join(" | ");
         write!(f, "{}", s)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Cube;
+
+    #[test]
+    fn test_cube_zero_one() {
+        assert!(Cube::zero().is_zero());
+        assert!(!Cube::one().is_zero());
+        assert!(!Cube::zero().is_one());
+        assert!(Cube::one().is_one());
+        for i in 0..32 {
+            assert!(!Cube::nth_var(i).is_zero());
+            assert!(!Cube::nth_var(i).is_one());
+            assert!(!Cube::nth_var_inv(i).is_zero());
+            assert!(!Cube::nth_var_inv(i).is_one());
+        }
+    }
+
+    #[test]
+    fn test_cube_display() {
+        assert_eq!(format!("{}", Cube::zero()), "0");
+        assert_eq!(format!("{}", Cube::one()), "1");
+        for i in 0..32 {
+            assert_eq!(format!("{}", Cube::nth_var(i)), format!("x{}", i));
+            assert_eq!(format!("{}", Cube::nth_var_inv(i)), format!("!x{}", i));
+        }
+        for i in 0..32 {
+            for j in i + 1..32 {
+                assert_eq!(
+                    format!("{}", Cube::from_vars(&[i, j], &[])),
+                    format!("x{}x{}", i, j)
+                );
+                assert_eq!(
+                    format!("{}", Cube::from_vars(&[i], &[j])),
+                    format!("x{}!x{}", i, j)
+                );
+                assert_eq!(
+                    format!("{}", Cube::from_vars(&[j], &[i])),
+                    format!("!x{}x{}", i, j)
+                );
+                assert_eq!(
+                    format!("{}", Cube::from_vars(&[], &[i, j])),
+                    format!("!x{}!x{}", i, j)
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_num_lits() {
+        assert_eq!(Cube::zero().num_lits(), 0);
+        assert_eq!(Cube::one().num_lits(), 0);
+        for i in 0..32 {
+            assert_eq!(Cube::nth_var(i).num_lits(), 1);
+            assert_eq!(Cube::nth_var_inv(i).num_lits(), 1);
+        }
+        for i in 0..32 {
+            for j in i + 1..32 {
+                assert_eq!(Cube::from_vars(&[i, j], &[]).num_lits(), 2);
+                assert_eq!(Cube::from_vars(&[i], &[j]).num_lits(), 2);
+                assert_eq!(Cube::from_vars(&[j], &[i]).num_lits(), 2);
+                assert_eq!(Cube::from_vars(&[], &[i, j]).num_lits(), 2);
+            }
+        }
     }
 }
