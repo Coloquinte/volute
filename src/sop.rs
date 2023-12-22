@@ -7,13 +7,14 @@ use std::{fmt, ops::BitAnd};
 ///
 /// It only supports And operations. Anything else must be implemented by more complex
 /// representations that use it, such as sum-of-products.
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Cube {
-    a: u64,
+    pos: u32,
+    neg: u32,
 }
 
 /// Representation of a sum-of-products (an or of and)
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Sop {
     cubes: Vec<Cube>,
 }
@@ -21,12 +22,12 @@ pub struct Sop {
 impl Cube {
     /// The empty cube
     pub fn one() -> Cube {
-        Cube { a: 0 }
+        Cube { pos: 0, neg: 0 }
     }
 
     /// The zero cube (not strictly a cube, so it gets a special representation)
     pub fn zero() -> Cube {
-        Cube { a: !0 }
+        Cube { pos: !0, neg: !0 }
     }
 
     /// Check whether the cube is a constant
@@ -36,31 +37,41 @@ impl Cube {
 
     /// Check whether the cube is the constant one
     pub fn is_one(&self) -> bool {
-        self.a == 0
+        self.pos == 0 && self.neg == 0
     }
 
     /// Return the cube representing the nth variable
     pub fn nth_var(var: usize) -> Cube {
-        Cube { a: 1 << (2 * var) }
+        Cube {
+            pos: 1 << var,
+            neg: 0,
+        }
     }
 
     /// Return the cube representing the nth variable, inverted
     pub fn nth_var_inv(var: usize) -> Cube {
         Cube {
-            a: 1 << (2 * var + 1),
+            pos: 0,
+            neg: 1 << var,
         }
+    }
+
+    /// Get the value of the Cube for these inputs (input bits packed in the mask)
+    pub fn value(&self, mask: u32) -> bool {
+        (self.pos & mask) | !self.pos == !0 && (self.neg & !mask) | !self.neg == !0
     }
 
     /// Return the cube representing the nth variable, inverted
     pub fn from_vars(pos_vars: &[usize], neg_vars: &[usize]) -> Cube {
-        let mut a = 0;
+        let mut pos = 0;
         for p in pos_vars {
-            a |= 1 << (2 * p);
+            pos |= 1 << p;
         }
+        let mut neg = 0;
         for p in neg_vars {
-            a |= 1 << (2 * p + 1);
+            neg |= 1 << p;
         }
-        let c = Cube { a };
+        let c = Cube { pos, neg };
         if c.is_zero() {
             Cube::zero()
         } else {
@@ -73,7 +84,7 @@ impl Cube {
         if self.is_zero() {
             0
         } else {
-            self.a.count_ones() as usize
+            self.pos.count_ones() as usize + self.neg.count_ones() as usize
         }
     }
 
@@ -81,29 +92,30 @@ impl Cube {
     ///
     /// This can happen after And operations, so we check if any variable has the two bits set.
     pub fn is_zero(&self) -> bool {
-        (self.a & 0xaaaa_aaaa_aaaa_aaaa) >> 1 & self.a != 0
+        self.pos & self.neg != 0
     }
 
     /// Returns the variables that are positive in the cube
     pub fn pos_vars(&self) -> Vec<usize> {
-        (0..32).filter(|v| (self.a >> (2 * v) & 1) != 0).collect()
+        (0..32).filter(|v| (self.pos >> v & 1) != 0).collect()
     }
 
     /// Returns the variables that are negative in the cube
     pub fn neg_vars(&self) -> Vec<usize> {
-        (0..32)
-            .filter(|v| (self.a >> (2 * v + 1) & 1) != 0)
-            .collect()
+        (0..32).filter(|v| (self.neg >> v & 1) != 0).collect()
     }
 
     /// Returns whether the cube implies another. This is used for Sop simplification
     pub fn implies(&self, o: Cube) -> bool {
-        self.a | o.a == self.a
+        self.pos | o.pos == self.pos && self.neg | o.neg == self.neg
     }
 
     /// Perform the and operation on two cubes
     fn and(a: Cube, b: Cube) -> Cube {
-        let ret = Cube { a: a.a | b.a };
+        let ret = Cube {
+            pos: a.pos | b.pos,
+            neg: a.neg | b.neg,
+        };
         if ret.is_zero() {
             // Normalize any zero cube to the standard zero
             Cube::zero()
@@ -151,16 +163,19 @@ impl fmt::Display for Cube {
             write!(f, "0")?;
             return Ok(());
         }
-        let mut a = self.a;
+        let mut pos = self.pos;
+        let mut neg = self.neg;
         let mut i = 0;
-        while a != 0 {
-            if a & 1 != 0 {
+        while pos != 0 || neg != 0 {
+            if pos & 1 != 0 {
                 write!(f, "x{}", i)?;
-            } else if a & 2 != 0 {
+            }
+            if neg & 1 != 0 {
                 write!(f, "!x{}", i)?;
             }
             i += 1;
-            a >>= 2;
+            pos >>= 1;
+            neg >>= 1;
         }
         Ok(())
     }
@@ -349,6 +364,47 @@ mod tests {
                 assert!(Cube::from_vars(&[], &[i, j]).implies(Cube::nth_var_inv(j)));
                 assert!(!Cube::from_vars(&[], &[i, j]).implies(Cube::nth_var(i)));
                 assert!(!Cube::from_vars(&[], &[i, j]).implies(Cube::nth_var(j)));
+            }
+        }
+    }
+
+    #[test]
+    fn test_cube_and() {
+        for i in 0..32 {
+            let vi = Cube::nth_var(i);
+            let vin = Cube::nth_var_inv(i);
+            assert_eq!(vi, vi & vi);
+            assert_eq!(vin, vin & vin);
+            assert_eq!(Cube::zero(), vi & vin);
+            for j in i + 1..32 {
+                let vj = Cube::nth_var(j);
+                let vjn = Cube::nth_var_inv(j);
+                assert_eq!(Cube::from_vars(&[i, j], &[]), vi & vj);
+                assert_eq!(Cube::from_vars(&[i], &[j]), vi & vjn);
+                assert_eq!(Cube::from_vars(&[j], &[i]), vin & vj);
+                assert_eq!(Cube::from_vars(&[], &[i, j]), vin & vjn);
+            }
+        }
+    }
+
+    #[test]
+    fn test_cube_value() {
+        for i in 0..32 {
+            let vi = Cube::nth_var(i);
+            let vin = Cube::nth_var_inv(i);
+            assert!(vi.value(1 << i));
+            assert!(!vi.value(!(1 << i)));
+            assert!(!vin.value(1 << i));
+            assert!(vin.value(!(1 << i)));
+            for j in i + 1..32 {
+                let vj = Cube::nth_var(j);
+                let vjn = Cube::nth_var_inv(j);
+                assert!((vi & vj).value(1 << i | 1 << j));
+                assert!(!(vi & vj).value(1 << i));
+                assert!(!(vi & vj).value(1 << j));
+                assert!((vin & vjn).value(!(1 << i | 1 << j)));
+                assert!(!(vin & vjn).value(!(1 << i)));
+                assert!(!(vin & vjn).value(!(1 << j)));
             }
         }
     }
