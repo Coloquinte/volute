@@ -46,6 +46,8 @@ Create the parity function on three variables, and check that in can be decompos
 Check its value in binary.
 ```rust
 let lut = Lut::parity(3);
-assert_eq!(lut.decomposition(0), DecompositionType::Xor);
+assert_eq!(lut.top_decomposition(0), DecompositionType::Xor);
 assert_eq!(format!("{:b}", lut), "Lut3(10010110)");
 ```
+
+<!-- cargo-rdme end -->
