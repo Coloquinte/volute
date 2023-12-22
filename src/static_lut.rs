@@ -584,6 +584,54 @@ pub type Lut11 = StaticLut<11, 32>;
 /// 12-input Lut
 pub type Lut12 = StaticLut<12, 64>;
 
+impl From<u8> for Lut3 {
+    fn from(table: u8) -> Lut3 {
+        Lut3::from_blocks(&[table as u64])
+    }
+}
+
+impl From<u16> for Lut4 {
+    fn from(table: u16) -> Lut4 {
+        Lut4::from_blocks(&[table as u64])
+    }
+}
+
+impl From<u32> for Lut5 {
+    fn from(table: u32) -> Lut5 {
+        Lut5::from_blocks(&[table as u64])
+    }
+}
+
+impl From<u64> for Lut6 {
+    fn from(table: u64) -> Lut6 {
+        Lut6::from_blocks(&[table as u64])
+    }
+}
+
+impl From<Lut3> for u8 {
+    fn from(lut: Lut3) -> u8 {
+        (lut.table[0] & VAR_MASK[3]) as u8
+    }
+}
+
+impl From<Lut4> for u16 {
+    fn from(lut: Lut4) -> u16 {
+        (lut.table[0] & VAR_MASK[4]) as u16
+    }
+}
+
+impl From<Lut5> for u32 {
+    fn from(lut: Lut5) -> u32 {
+        (lut.table[0] & VAR_MASK[5]) as u32
+    }
+}
+
+impl From<Lut6> for u64 {
+    fn from(lut: Lut6) -> u64 {
+        lut.table[0]
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::{Lut0, Lut1, Lut2, Lut3, Lut4, Lut5, Lut6, Lut7};
@@ -673,7 +721,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "rand")]
-    fn test_conversion() {
+    fn test_lut_conversion() {
         use crate::{Lut, Lut7};
         for _ in 0..10 {
             let lut = Lut3::random();
@@ -682,6 +730,27 @@ mod tests {
         for _ in 0..10 {
             let lut = Lut7::random();
             assert_eq!(lut, Lut7::try_from(Lut::from(lut)).unwrap());
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "rand")]
+    fn test_int_conversion() {
+        for _ in 0..10 {
+            let lut = Lut3::random();
+            assert_eq!(lut, Lut3::from(u8::from(lut)));
+        }
+        for _ in 0..10 {
+            let lut = Lut4::random();
+            assert_eq!(lut, Lut4::from(u16::from(lut)));
+        }
+        for _ in 0..10 {
+            let lut = Lut5::random();
+            assert_eq!(lut, Lut5::from(u32::from(lut)));
+        }
+        for _ in 0..10 {
+            let lut = Lut6::random();
+            assert_eq!(lut, Lut6::from(u64::from(lut)));
         }
     }
 }
