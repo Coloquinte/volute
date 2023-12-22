@@ -179,12 +179,26 @@ impl Sop {
         }
     }
 
-    /// Returns whether the Sop is constant zero
+    /// Number of cubes in the Sop
+    pub fn num_cubes(&self) -> usize {
+        self.cubes.len()
+    }
+
+    /// Number of literals in the Sop
+    pub fn num_lits(&self) -> usize {
+        let mut ret = 0;
+        for c in &self.cubes {
+            ret += c.num_lits();
+        }
+        ret
+    }
+
+    /// Returns whether the Sop is trivially constant zero
     pub fn is_zero(&self) -> bool {
         self.cubes.is_empty()
     }
 
-    /// Returns whether the Sop is constant one
+    /// Returns whether the Sop is trivially constant one
     pub fn is_one(&self) -> bool {
         match self.cubes.first() {
             Some(c) => c.is_one(),
@@ -192,7 +206,12 @@ impl Sop {
         }
     }
 
-    /// Simplify the Sop, only keeping irredundant cubes
+    /// Basic simplification of the Sop
+    ///
+    /// The following simplifications are performed:
+    ///   * Zero cubes are removed
+    ///   * Cubes that are implied by another are removed
+    ///   * Some cubes that differ by one literal are merged
     fn simplify(&mut self) {
         // No need for zeros
         self.cubes.retain(|c| !c.is_zero());
@@ -304,6 +323,32 @@ mod tests {
                 assert_eq!(Cube::from_vars(&[i], &[j]).num_lits(), 2);
                 assert_eq!(Cube::from_vars(&[j], &[i]).num_lits(), 2);
                 assert_eq!(Cube::from_vars(&[], &[i, j]).num_lits(), 2);
+            }
+        }
+    }
+
+    #[test]
+    fn test_implies() {
+        for i in 0..32 {
+            assert!(!Cube::one().implies(Cube::nth_var(i)));
+            assert!(!Cube::one().implies(Cube::nth_var_inv(i)));
+            assert!(Cube::zero().implies(Cube::nth_var(i)));
+            assert!(Cube::zero().implies(Cube::nth_var_inv(i)));
+            assert!(Cube::nth_var(i).implies(Cube::one()));
+            assert!(Cube::nth_var_inv(i).implies(Cube::one()));
+            assert!(!Cube::nth_var(i).implies(Cube::zero()));
+            assert!(!Cube::nth_var_inv(i).implies(Cube::zero()));
+        }
+        for i in 0..32 {
+            for j in i + 1..32 {
+                assert!(Cube::from_vars(&[i, j], &[]).implies(Cube::nth_var(i)));
+                assert!(Cube::from_vars(&[i, j], &[]).implies(Cube::nth_var(j)));
+                assert!(!Cube::from_vars(&[i, j], &[]).implies(Cube::nth_var_inv(i)));
+                assert!(!Cube::from_vars(&[i, j], &[]).implies(Cube::nth_var_inv(j)));
+                assert!(Cube::from_vars(&[], &[i, j]).implies(Cube::nth_var_inv(i)));
+                assert!(Cube::from_vars(&[], &[i, j]).implies(Cube::nth_var_inv(j)));
+                assert!(!Cube::from_vars(&[], &[i, j]).implies(Cube::nth_var(i)));
+                assert!(!Cube::from_vars(&[], &[i, j]).implies(Cube::nth_var(j)));
             }
         }
     }
