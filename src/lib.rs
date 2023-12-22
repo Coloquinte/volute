@@ -56,6 +56,7 @@ mod static_lut;
 
 pub use decomposition::DecompositionType;
 pub use lut::Lut;
+pub use sop::{Cube, Sop};
 pub use static_lut::StaticLut;
 
 pub use static_lut::{
