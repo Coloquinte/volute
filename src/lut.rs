@@ -125,9 +125,23 @@ impl Lut {
     }
 
     /// Get the value of the Lut for these inputs (input bits packed in the mask)
+    pub fn value(&self, mask: usize) -> bool {
+        self.get_bit(mask)
+    }
+
+    /// Get the value of the Lut for these inputs (input bits packed in the mask)
     pub fn get_bit(&self, mask: usize) -> bool {
         self.check_bit(mask);
         get_bit(self.num_vars, self.table.as_ref(), mask)
+    }
+
+    /// Set the value of the Lut for these inputs (input bits packed in the mask)
+    pub fn set_value(&mut self, mask: usize, value: bool) {
+        if value {
+            self.set_bit(mask)
+        } else {
+            self.unset_bit(mask)
+        }
     }
 
     /// Set the value of the Lut for these inputs to true (input bits packed in the mask)
