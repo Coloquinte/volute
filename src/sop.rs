@@ -2,7 +2,7 @@ use std::fmt;
 
 use crate::cube::Cube;
 
-/// Sum-of-products representation (Or of And)
+/// Sum of products representation (Or of And)
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Sop {
     cubes: Vec<Cube>,

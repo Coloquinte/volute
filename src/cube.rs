@@ -26,7 +26,7 @@ pub struct Cube {
 /// It only supports Not and Xor operations. Anything else must be implemented by more complex
 /// representations that use it.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
-pub struct XCube {
+pub struct Ecube {
     vars: u32,
     xnor: bool,
 }
@@ -135,6 +135,15 @@ impl Cube {
             ret
         }
     }
+
+    /// Return all possible cubes with a given number of variables
+    pub fn all(vars: usize) -> impl Iterator<Item = Cube> {
+        let mx: u32 = 1 << vars;
+        (0..mx)
+            .flat_map(move |i| (0..mx).map(move |j| (i, j)))
+            .map(|(i, j)| Cube { pos: i, neg: j })
+            .filter(|c| !c.is_zero())
+    }
 }
 
 impl BitAnd<Cube> for Cube {
@@ -193,18 +202,18 @@ impl fmt::Display for Cube {
     }
 }
 
-impl XCube {
+impl Ecube {
     /// The empty cube
-    pub fn one() -> XCube {
-        XCube {
+    pub fn one() -> Ecube {
+        Ecube {
             vars: 0,
             xnor: true,
         }
     }
 
     /// The zero cube
-    pub fn zero() -> XCube {
-        XCube {
+    pub fn zero() -> Ecube {
+        Ecube {
             vars: 0,
             xnor: false,
         }
@@ -221,16 +230,16 @@ impl XCube {
     }
 
     /// Return the cube representing the nth variable
-    pub fn nth_var(var: usize) -> XCube {
-        XCube {
+    pub fn nth_var(var: usize) -> Ecube {
+        Ecube {
             vars: 1 << var,
             xnor: false,
         }
     }
 
     /// Return the cube representing the nth variable, inverted
-    pub fn nth_var_inv(var: usize) -> XCube {
-        XCube {
+    pub fn nth_var_inv(var: usize) -> Ecube {
+        Ecube {
             vars: 1 << var,
             xnor: true,
         }
@@ -243,12 +252,12 @@ impl XCube {
     }
 
     /// Build a cube from its variables
-    pub fn from_vars(vars: &[usize], xnor: bool) -> XCube {
+    pub fn from_vars(vars: &[usize], xnor: bool) -> Ecube {
         let mut v = 0;
         for p in vars {
             v |= 1 << p;
         }
-        XCube { vars: v, xnor }
+        Ecube { vars: v, xnor }
     }
 
     /// Return the number of literals
@@ -260,69 +269,77 @@ impl XCube {
     pub fn vars(&self) -> Vec<usize> {
         (0..32).filter(|v| (self.vars >> v & 1) != 0).collect()
     }
+
+    /// Return all possible cubes with a given number of variables
+    pub fn all(vars: usize) -> impl Iterator<Item = Ecube> {
+        let mx: u32 = 1 << vars;
+        (0..mx)
+            .flat_map(|i| [false, true].map(|x| (i, x)))
+            .map(|(i, x)| Ecube { vars: i, xnor: x })
+    }
 }
 
-impl Not for XCube {
-    type Output = XCube;
+impl Not for Ecube {
+    type Output = Ecube;
     fn not(self) -> Self::Output {
-        XCube {
+        Ecube {
             vars: self.vars,
             xnor: !self.xnor,
         }
     }
 }
 
-impl Not for &XCube {
-    type Output = XCube;
+impl Not for &Ecube {
+    type Output = Ecube;
     fn not(self) -> Self::Output {
-        XCube {
+        Ecube {
             vars: self.vars,
             xnor: !self.xnor,
         }
     }
 }
 
-impl BitXor<XCube> for XCube {
-    type Output = XCube;
-    fn bitxor(self, rhs: XCube) -> Self::Output {
-        XCube {
+impl BitXor<Ecube> for Ecube {
+    type Output = Ecube;
+    fn bitxor(self, rhs: Ecube) -> Self::Output {
+        Ecube {
             vars: self.vars ^ rhs.vars,
             xnor: self.xnor ^ rhs.xnor,
         }
     }
 }
 
-impl BitXor<XCube> for &XCube {
-    type Output = XCube;
-    fn bitxor(self, rhs: XCube) -> Self::Output {
-        XCube {
+impl BitXor<Ecube> for &Ecube {
+    type Output = Ecube;
+    fn bitxor(self, rhs: Ecube) -> Self::Output {
+        Ecube {
             vars: self.vars ^ rhs.vars,
             xnor: self.xnor ^ rhs.xnor,
         }
     }
 }
 
-impl BitXor<&XCube> for &XCube {
-    type Output = XCube;
-    fn bitxor(self, rhs: &XCube) -> Self::Output {
-        XCube {
+impl BitXor<&Ecube> for &Ecube {
+    type Output = Ecube;
+    fn bitxor(self, rhs: &Ecube) -> Self::Output {
+        Ecube {
             vars: self.vars ^ rhs.vars,
             xnor: self.xnor ^ rhs.xnor,
         }
     }
 }
 
-impl BitXor<&XCube> for XCube {
-    type Output = XCube;
-    fn bitxor(self, rhs: &XCube) -> Self::Output {
-        XCube {
+impl BitXor<&Ecube> for Ecube {
+    type Output = Ecube;
+    fn bitxor(self, rhs: &Ecube) -> Self::Output {
+        Ecube {
             vars: self.vars ^ rhs.vars,
             xnor: self.xnor ^ rhs.xnor,
         }
     }
 }
 
-impl fmt::Display for XCube {
+impl fmt::Display for Ecube {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.is_zero() {
             write!(f, "0")?;
@@ -349,7 +366,7 @@ impl fmt::Display for XCube {
 
 #[cfg(test)]
 mod tests {
-    use super::{Cube, XCube};
+    use super::{Cube, Ecube};
 
     #[test]
     fn test_cube_zero_one() {
@@ -367,15 +384,15 @@ mod tests {
 
     #[test]
     fn test_xcube_zero_one() {
-        assert!(XCube::zero().is_zero());
-        assert!(!XCube::one().is_zero());
-        assert!(!XCube::zero().is_one());
-        assert!(XCube::one().is_one());
+        assert!(Ecube::zero().is_zero());
+        assert!(!Ecube::one().is_zero());
+        assert!(!Ecube::zero().is_one());
+        assert!(Ecube::one().is_one());
         for i in 0..32 {
-            assert!(!XCube::nth_var(i).is_zero());
-            assert!(!XCube::nth_var(i).is_one());
-            assert!(!XCube::nth_var_inv(i).is_zero());
-            assert!(!XCube::nth_var_inv(i).is_one());
+            assert!(!Ecube::nth_var(i).is_zero());
+            assert!(!Ecube::nth_var(i).is_one());
+            assert!(!Ecube::nth_var_inv(i).is_zero());
+            assert!(!Ecube::nth_var_inv(i).is_one());
         }
     }
 
@@ -411,16 +428,16 @@ mod tests {
 
     #[test]
     fn test_xcube_display() {
-        assert_eq!(format!("{}", XCube::zero()), "0");
-        assert_eq!(format!("{}", XCube::one()), "1");
+        assert_eq!(format!("{}", Ecube::zero()), "0");
+        assert_eq!(format!("{}", Ecube::one()), "1");
         for i in 0..32 {
-            assert_eq!(format!("{}", XCube::nth_var(i)), format!("x{}", i));
-            assert_eq!(format!("{}", XCube::nth_var_inv(i)), format!("1 ^ x{}", i));
+            assert_eq!(format!("{}", Ecube::nth_var(i)), format!("x{}", i));
+            assert_eq!(format!("{}", Ecube::nth_var_inv(i)), format!("1 ^ x{}", i));
         }
         for i in 0..32 {
-            let vi = XCube::nth_var(i);
+            let vi = Ecube::nth_var(i);
             for j in i + 1..32 {
-                let vj = XCube::nth_var(j);
+                let vj = Ecube::nth_var(j);
                 assert_eq!(format!("{}", vi ^ vj), format!("x{} ^ x{}", i, j));
                 assert_eq!(format!("{}", vi ^ !vj), format!("1 ^ x{} ^ x{}", i, j));
                 assert_eq!(format!("{}", !vi ^ vj), format!("1 ^ x{} ^ x{}", i, j));
@@ -495,18 +512,18 @@ mod tests {
     #[test]
     fn test_xcube_xor() {
         for i in 0..32 {
-            let vi = XCube::nth_var(i);
-            let vin = XCube::nth_var_inv(i);
-            assert_eq!(XCube::zero(), vi ^ vi);
-            assert_eq!(XCube::one(), vi ^ vin);
-            assert_eq!(XCube::zero(), vin ^ vin);
+            let vi = Ecube::nth_var(i);
+            let vin = Ecube::nth_var_inv(i);
+            assert_eq!(Ecube::zero(), vi ^ vi);
+            assert_eq!(Ecube::one(), vi ^ vin);
+            assert_eq!(Ecube::zero(), vin ^ vin);
             for j in i + 1..32 {
-                let vj = XCube::nth_var(j);
-                let vjn = XCube::nth_var_inv(j);
-                assert_eq!(XCube::from_vars(&[i, j], false), vi ^ vj);
-                assert_eq!(XCube::from_vars(&[i, j], true), vi ^ vjn);
-                assert_eq!(XCube::from_vars(&[i, j], true), vin ^ vj);
-                assert_eq!(XCube::from_vars(&[i, j], false), vin ^ vjn);
+                let vj = Ecube::nth_var(j);
+                let vjn = Ecube::nth_var_inv(j);
+                assert_eq!(Ecube::from_vars(&[i, j], false), vi ^ vj);
+                assert_eq!(Ecube::from_vars(&[i, j], true), vi ^ vjn);
+                assert_eq!(Ecube::from_vars(&[i, j], true), vin ^ vj);
+                assert_eq!(Ecube::from_vars(&[i, j], false), vin ^ vjn);
             }
         }
     }
@@ -536,19 +553,31 @@ mod tests {
     #[test]
     fn test_xcube_value() {
         for i in 0..32 {
-            let vi = XCube::nth_var(i);
-            let vin = XCube::nth_var_inv(i);
+            let vi = Ecube::nth_var(i);
+            let vin = Ecube::nth_var_inv(i);
             assert!(vi.value(1 << i));
             assert!(!vi.value(!(1 << i)));
             assert!(!vin.value(1 << i));
             assert!(vin.value(!(1 << i)));
             for j in i + 1..32 {
-                let vj = XCube::nth_var(j);
+                let vj = Ecube::nth_var(j);
                 assert!(!(vi ^ vj).value(1 << i | 1 << j));
                 assert!((vi ^ vj).value(1 << i));
                 assert!((vi ^ vj).value(1 << j));
                 assert!(!(vi ^ vj).value(0));
             }
         }
+    }
+
+    #[test]
+    fn test_cube_num() {
+        assert_eq!(Cube::all(0).count(), 1);
+        assert_eq!(Cube::all(1).count(), 3);
+        assert_eq!(Cube::all(2).count(), 9);
+        assert_eq!(Cube::all(3).count(), 27);
+        assert_eq!(Ecube::all(0).count(), 2);
+        assert_eq!(Ecube::all(1).count(), 4);
+        assert_eq!(Ecube::all(2).count(), 8);
+        assert_eq!(Ecube::all(3).count(), 16);
     }
 }
