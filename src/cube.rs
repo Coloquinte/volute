@@ -75,9 +75,20 @@ impl Cube {
         }
     }
 
+    /// Obtain the minterm for a value of the variables
+    pub fn minterm(num_vars: usize, mask: usize) -> Cube {
+        let m = mask as u32;
+        let tot = (1 << num_vars) - 1;
+        Cube {
+            pos: m & tot,
+            neg: !m & tot,
+        }
+    }
+
     /// Get the value of the Cube for these inputs (input bits packed in the mask)
-    pub fn value(&self, mask: u32) -> bool {
-        (self.pos & mask) | !self.pos == !0 && (self.neg & !mask) | !self.neg == !0
+    pub fn value(&self, mask: usize) -> bool {
+        let m = mask as u32;
+        (self.pos & m) | !self.pos == !0 && (self.neg & !m) | !self.neg == !0
     }
 
     /// Build a cube from the literals in it
@@ -108,13 +119,13 @@ impl Cube {
     }
 
     /// Returns the variables that are positive in the cube
-    pub fn pos_vars(&self) -> Vec<usize> {
-        (0..32).filter(|v| (self.pos >> v & 1) != 0).collect()
+    pub fn pos_vars(&self) -> impl Iterator<Item = usize> + '_ {
+        (0..32).filter(|v| (self.pos >> v & 1) != 0)
     }
 
     /// Returns the variables that are negative in the cube
-    pub fn neg_vars(&self) -> Vec<usize> {
-        (0..32).filter(|v| (self.neg >> v & 1) != 0).collect()
+    pub fn neg_vars(&self) -> impl Iterator<Item = usize> + '_ {
+        (0..32).filter(|v| (self.neg >> v & 1) != 0)
     }
 
     /// Returns whether the cube implies another. This is used for Sop simplification
@@ -246,8 +257,9 @@ impl Ecube {
     }
 
     /// Get the value of the cube for these inputs (input bits packed in the mask)
-    pub fn value(&self, mask: u32) -> bool {
-        let xorv = (self.vars & mask).count_ones() % 2;
+    pub fn value(&self, mask: usize) -> bool {
+        let m = mask as u32;
+        let xorv = (self.vars & m).count_ones() % 2;
         (xorv == 1) ^ self.xnor
     }
 
@@ -266,8 +278,8 @@ impl Ecube {
     }
 
     /// Returns the variables in the cube
-    pub fn vars(&self) -> Vec<usize> {
-        (0..32).filter(|v| (self.vars >> v & 1) != 0).collect()
+    pub fn vars(&self) -> impl Iterator<Item = usize> + '_ {
+        (0..32).filter(|v| (self.vars >> v & 1) != 0)
     }
 
     /// Return all possible cubes with a given number of variables
