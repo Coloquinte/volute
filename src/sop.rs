@@ -1,9 +1,12 @@
-use std::{fmt, ops::BitAnd};
+use std::{
+    fmt,
+    ops::{BitAnd, BitXor, Not},
+};
 
-/// Representation of the and of variables (a cube in sum-of-products formulations)
+/// Representation of the And of variables (a cube in sum-of-products formulations)
 ///
-/// Each variable is represented by a pair of bits. If none is set, the variable is unused.
-/// If both are set, the cube is 0. Otherwise, LSB represents the variable and MSB its complement.
+/// Each variable is represented by a pair of bits, representing respectively the positive
+/// and negative literal. If none is set, the variable is unused. If both are set, the cube is 0.
 ///
 /// It only supports And operations. Anything else must be implemented by more complex
 /// representations that use it, such as sum-of-products.
@@ -13,7 +16,20 @@ pub struct Cube {
     neg: u32,
 }
 
-/// Representation of a sum-of-products (an or of and)
+/// Representation of the Xor of variables, similar to [`Cube`] for Xor
+///
+/// Each variable is represented by a bit, and the overall parity (xor or xnor) is represented
+/// on the side.
+///
+/// It only supports Not and Xor operations. Anything else must be implemented by more complex
+/// representations that use it.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+pub struct XCube {
+    vars: u32,
+    xnor: bool,
+}
+
+/// Representation of a sum-of-products (or of and)
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Sop {
     cubes: Vec<Cube>,
@@ -33,6 +49,13 @@ impl Cube {
     /// Check whether the cube is a constant
     pub fn is_constant(&self) -> bool {
         self.is_one() || self.is_zero()
+    }
+
+    /// Check whether the cube is a constant zero
+    ///
+    /// This can happen after And operations, so we check if any variable has the two bits set.
+    pub fn is_zero(&self) -> bool {
+        self.pos & self.neg != 0
     }
 
     /// Check whether the cube is the constant one
@@ -61,7 +84,7 @@ impl Cube {
         (self.pos & mask) | !self.pos == !0 && (self.neg & !mask) | !self.neg == !0
     }
 
-    /// Return the cube representing the nth variable, inverted
+    /// Build a cube from the literals in it
     pub fn from_vars(pos_vars: &[usize], neg_vars: &[usize]) -> Cube {
         let mut pos = 0;
         for p in pos_vars {
@@ -86,13 +109,6 @@ impl Cube {
         } else {
             self.pos.count_ones() as usize + self.neg.count_ones() as usize
         }
-    }
-
-    /// Check whether the cube is a constant zero
-    ///
-    /// This can happen after And operations, so we check if any variable has the two bits set.
-    pub fn is_zero(&self) -> bool {
-        self.pos & self.neg != 0
     }
 
     /// Returns the variables that are positive in the cube
@@ -181,6 +197,160 @@ impl fmt::Display for Cube {
     }
 }
 
+impl XCube {
+    /// The empty cube
+    pub fn one() -> XCube {
+        XCube {
+            vars: 0,
+            xnor: true,
+        }
+    }
+
+    /// The zero cube
+    pub fn zero() -> XCube {
+        XCube {
+            vars: 0,
+            xnor: false,
+        }
+    }
+
+    /// Check whether the cube is a constant zero
+    pub fn is_zero(&self) -> bool {
+        self.vars == 0 && !self.xnor
+    }
+
+    /// Check whether the cube is the constant one
+    pub fn is_one(&self) -> bool {
+        self.vars == 0 && self.xnor
+    }
+
+    /// Return the cube representing the nth variable
+    pub fn nth_var(var: usize) -> XCube {
+        XCube {
+            vars: 1 << var,
+            xnor: false,
+        }
+    }
+
+    /// Return the cube representing the nth variable, inverted
+    pub fn nth_var_inv(var: usize) -> XCube {
+        XCube {
+            vars: 1 << var,
+            xnor: true,
+        }
+    }
+
+    /// Get the value of the cube for these inputs (input bits packed in the mask)
+    pub fn value(&self, mask: u32) -> bool {
+        let xorv = (self.vars ^ mask).count_ones() % 2;
+        (xorv == 1) ^ self.xnor
+    }
+
+    /// Build a cube from its variables
+    pub fn from_vars(vars: &[usize], xnor: bool) -> XCube {
+        let mut v = 0;
+        for p in vars {
+            v |= 1 << p;
+        }
+        XCube { vars: v, xnor }
+    }
+
+    /// Return the number of literals
+    pub fn num_lits(&self) -> usize {
+        self.vars.count_ones() as usize
+    }
+
+    /// Returns the variables in the cube
+    pub fn vars(&self) -> Vec<usize> {
+        (0..32).filter(|v| (self.vars >> v & 1) != 0).collect()
+    }
+}
+
+impl Not for XCube {
+    type Output = XCube;
+    fn not(self) -> Self::Output {
+        XCube {
+            vars: self.vars,
+            xnor: !self.xnor,
+        }
+    }
+}
+
+impl Not for &XCube {
+    type Output = XCube;
+    fn not(self) -> Self::Output {
+        XCube {
+            vars: self.vars,
+            xnor: !self.xnor,
+        }
+    }
+}
+
+impl BitXor<XCube> for XCube {
+    type Output = XCube;
+    fn bitxor(self, rhs: XCube) -> Self::Output {
+        XCube {
+            vars: self.vars ^ rhs.vars,
+            xnor: self.xnor ^ rhs.xnor,
+        }
+    }
+}
+
+impl BitXor<XCube> for &XCube {
+    type Output = XCube;
+    fn bitxor(self, rhs: XCube) -> Self::Output {
+        XCube {
+            vars: self.vars ^ rhs.vars,
+            xnor: self.xnor ^ rhs.xnor,
+        }
+    }
+}
+
+impl BitXor<&XCube> for &XCube {
+    type Output = XCube;
+    fn bitxor(self, rhs: &XCube) -> Self::Output {
+        XCube {
+            vars: self.vars ^ rhs.vars,
+            xnor: self.xnor ^ rhs.xnor,
+        }
+    }
+}
+
+impl BitXor<&XCube> for XCube {
+    type Output = XCube;
+    fn bitxor(self, rhs: &XCube) -> Self::Output {
+        XCube {
+            vars: self.vars ^ rhs.vars,
+            xnor: self.xnor ^ rhs.xnor,
+        }
+    }
+}
+
+impl fmt::Display for XCube {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.is_zero() {
+            write!(f, "0")?;
+            return Ok(());
+        }
+        let mut v = Vec::new();
+        if self.xnor {
+            v.push("1".to_string());
+        }
+        let mut vars = self.vars;
+        let mut i = 0;
+        while vars != 0 {
+            if vars & 1 != 0 {
+                v.push(format!("x{}", i));
+            }
+            i += 1;
+            vars >>= 1;
+        }
+
+        let s = v.join(" ^ ");
+        write!(f, "{}", s)
+    }
+}
+
 impl Sop {
     /// Return the constant zero Sop
     pub fn zero() -> Sop {
@@ -221,16 +391,39 @@ impl Sop {
         }
     }
 
+    /// Return the Sop representing the nth variable
+    pub fn nth_var(var: usize) -> Sop {
+        Sop {
+            cubes: vec![Cube::nth_var(var)],
+        }
+    }
+
+    /// Return the cube representing the nth variable, inverted
+    pub fn nth_var_inv(var: usize) -> Sop {
+        Sop {
+            cubes: vec![Cube::nth_var_inv(var)],
+        }
+    }
+
+    /// Get the value of the Sop for these inputs (input bits packed in the mask)
+    pub fn value(&self, mask: u32) -> bool {
+        let mut ret = false;
+        for c in &self.cubes {
+            ret |= c.value(mask);
+        }
+        ret
+    }
+
     /// Basic simplification of the Sop
     ///
     /// The following simplifications are performed:
     ///   * Zero cubes are removed
-    ///   * Cubes that are implied by another are removed
+    ///   * Cubes that imply another are removed
     ///   * Some cubes that differ by one literal are merged
     fn simplify(&mut self) {
         // No need for zeros
         self.cubes.retain(|c| !c.is_zero());
-        // Remove any cube that is implied by another
+        // Remove any cube that implies another
     }
 
     /// Compute the negation of an Sop
@@ -242,7 +435,9 @@ impl Sop {
     fn or(a: &Sop, b: &Sop) -> Sop {
         let mut cubes = a.cubes.clone();
         cubes.extend(&b.cubes);
-        Sop { cubes }
+        let mut ret = Sop { cubes };
+        ret.simplify();
+        ret
     }
 
     /// Compute the and of two Sops
@@ -256,7 +451,9 @@ impl Sop {
                 }
             }
         }
-        Sop { cubes }
+        let mut ret = Sop { cubes };
+        ret.simplify();
+        ret
     }
 }
 
@@ -278,7 +475,7 @@ impl fmt::Display for Sop {
 
 #[cfg(test)]
 mod tests {
-    use crate::Cube;
+    use crate::{Cube, XCube};
 
     #[test]
     fn test_cube_zero_one() {
@@ -291,6 +488,20 @@ mod tests {
             assert!(!Cube::nth_var(i).is_one());
             assert!(!Cube::nth_var_inv(i).is_zero());
             assert!(!Cube::nth_var_inv(i).is_one());
+        }
+    }
+
+    #[test]
+    fn test_xcube_zero_one() {
+        assert!(XCube::zero().is_zero());
+        assert!(!XCube::one().is_zero());
+        assert!(!XCube::zero().is_one());
+        assert!(XCube::one().is_one());
+        for i in 0..32 {
+            assert!(!XCube::nth_var(i).is_zero());
+            assert!(!XCube::nth_var(i).is_one());
+            assert!(!XCube::nth_var_inv(i).is_zero());
+            assert!(!XCube::nth_var_inv(i).is_one());
         }
     }
 
@@ -320,6 +531,26 @@ mod tests {
                     format!("{}", Cube::from_vars(&[], &[i, j])),
                     format!("!x{}!x{}", i, j)
                 );
+            }
+        }
+    }
+
+    #[test]
+    fn test_xcube_display() {
+        assert_eq!(format!("{}", XCube::zero()), "0");
+        assert_eq!(format!("{}", XCube::one()), "1");
+        for i in 0..32 {
+            assert_eq!(format!("{}", XCube::nth_var(i)), format!("x{}", i));
+            assert_eq!(format!("{}", XCube::nth_var_inv(i)), format!("1 ^ x{}", i));
+        }
+        for i in 0..32 {
+            let vi = XCube::nth_var(i);
+            for j in i + 1..32 {
+                let vj = XCube::nth_var(j);
+                assert_eq!(format!("{}", vi ^ vj), format!("x{} ^ x{}", i, j));
+                assert_eq!(format!("{}", vi ^ !vj), format!("1 ^ x{} ^ x{}", i, j));
+                assert_eq!(format!("{}", !vi ^ vj), format!("1 ^ x{} ^ x{}", i, j));
+                assert_eq!(format!("{}", !vi ^ !vj), format!("x{} ^ x{}", i, j));
             }
         }
     }
