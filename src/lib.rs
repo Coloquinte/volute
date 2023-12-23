@@ -51,12 +51,14 @@ mod canonization;
 mod decomposition;
 mod lut;
 mod operations;
+mod cube;
 mod sop;
 mod static_lut;
 
 pub use decomposition::DecompositionType;
 pub use lut::Lut;
-pub use sop::{Cube, Sop, XCube};
+pub use cube::{Cube, XCube};
+pub use sop::Sop;
 pub use static_lut::StaticLut;
 
 pub use static_lut::{
