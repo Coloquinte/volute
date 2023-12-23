@@ -242,7 +242,7 @@ impl XCube {
 
     /// Get the value of the cube for these inputs (input bits packed in the mask)
     pub fn value(&self, mask: u32) -> bool {
-        let xorv = (self.vars ^ mask).count_ones() % 2;
+        let xorv = (self.vars & mask).count_ones() % 2;
         (xorv == 1) ^ self.xnor
     }
 
@@ -619,6 +619,25 @@ mod tests {
     }
 
     #[test]
+    fn test_xcube_xor() {
+        for i in 0..32 {
+            let vi = XCube::nth_var(i);
+            let vin = XCube::nth_var_inv(i);
+            assert_eq!(XCube::zero(), vi ^ vi);
+            assert_eq!(XCube::one(), vi ^ vin);
+            assert_eq!(XCube::zero(), vin ^ vin);
+            for j in i + 1..32 {
+                let vj = XCube::nth_var(j);
+                let vjn = XCube::nth_var_inv(j);
+                assert_eq!(XCube::from_vars(&[i, j], false), vi ^ vj);
+                assert_eq!(XCube::from_vars(&[i, j], true), vi ^ vjn);
+                assert_eq!(XCube::from_vars(&[i, j], true), vin ^ vj);
+                assert_eq!(XCube::from_vars(&[i, j], false), vin ^ vjn);
+            }
+        }
+    }
+
+    #[test]
     fn test_cube_value() {
         for i in 0..32 {
             let vi = Cube::nth_var(i);
@@ -636,6 +655,25 @@ mod tests {
                 assert!((vin & vjn).value(!(1 << i | 1 << j)));
                 assert!(!(vin & vjn).value(!(1 << i)));
                 assert!(!(vin & vjn).value(!(1 << j)));
+            }
+        }
+    }
+
+    #[test]
+    fn test_xcube_value() {
+        for i in 0..32 {
+            let vi = XCube::nth_var(i);
+            let vin = XCube::nth_var_inv(i);
+            assert!(vi.value(1 << i));
+            assert!(!vi.value(!(1 << i)));
+            assert!(!vin.value(1 << i));
+            assert!(vin.value(!(1 << i)));
+            for j in i + 1..32 {
+                let vj = XCube::nth_var(j);
+                assert!(!(vi ^ vj).value(1 << i | 1 << j));
+                assert!((vi ^ vj).value(1 << i));
+                assert!((vi ^ vj).value(1 << j));
+                assert!(!(vi ^ vj).value(0));
             }
         }
     }
