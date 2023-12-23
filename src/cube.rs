@@ -1,3 +1,5 @@
+//! Compact representation of And and Xor functions
+
 use std::{
     fmt,
     ops::{BitAnd, BitXor, Not},
@@ -347,7 +349,7 @@ impl fmt::Display for XCube {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Cube, XCube};
+    use super::{Cube, XCube};
 
     #[test]
     fn test_cube_zero_one() {

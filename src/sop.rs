@@ -1,8 +1,8 @@
 use std::fmt;
 
-use crate::Cube;
+use crate::cube::Cube;
 
-/// Representation of a sum-of-products (or of and)
+/// Sum-of-products representation (Or of And)
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Sop {
     cubes: Vec<Cube>,
@@ -60,6 +60,11 @@ impl Sop {
         Sop {
             cubes: vec![Cube::nth_var_inv(var)],
         }
+    }
+
+    /// Returns the cubes in the Sop
+    pub fn cubes(&self) -> &[Cube] {
+        &self.cubes
     }
 
     /// Get the value of the Sop for these inputs (input bits packed in the mask)
