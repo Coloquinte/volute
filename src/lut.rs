@@ -347,8 +347,8 @@ impl Lut {
 
     /// Compute the number of nodes in the BDD representing these functions
     ///
-    /// This function uses the natural variable order (0 to num_vars) to build the BDD.
-    /// This may not be the smallest possible BDD.
+    /// Equivalent functions (up to output complementation) are represented by the same BDD node.
+    /// The natural variable order (0 to num_vars) is used: smaller BDDs may be possible with another ordering.
     pub fn bdd_complexity(luts: &[Self]) -> usize {
         if luts.is_empty() {
             return 0;

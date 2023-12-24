@@ -84,9 +84,9 @@ pub enum DecompositionType {
     And,
     /// Decomposition possible as Or
     Or,
-    /// Decomposition possible as Less-Or-Equal (equivalent to Nand for an output)
+    /// Decomposition possible as Less-Or-Equal (equivalent to Nand for a top decomposition)
     Le,
-    /// Decomposition possible as Less-Than (equivalent to Nor for an output)
+    /// Decomposition possible as Less-Than (equivalent to Nor for a top decomposition)
     Lt,
     /// Decomposition possible as Xor
     Xor,
