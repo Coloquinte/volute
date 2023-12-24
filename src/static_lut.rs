@@ -610,19 +610,19 @@ impl From<u64> for Lut6 {
 
 impl From<Lut3> for u8 {
     fn from(lut: Lut3) -> u8 {
-        (lut.table[0] & VAR_MASK[3]) as u8
+        (lut.table[0] & !VAR_MASK[3]) as u8
     }
 }
 
 impl From<Lut4> for u16 {
     fn from(lut: Lut4) -> u16 {
-        (lut.table[0] & VAR_MASK[4]) as u16
+        (lut.table[0] & !VAR_MASK[4]) as u16
     }
 }
 
 impl From<Lut5> for u32 {
     fn from(lut: Lut5) -> u32 {
-        (lut.table[0] & VAR_MASK[5]) as u32
+        (lut.table[0] & !VAR_MASK[5]) as u32
     }
 }
 
