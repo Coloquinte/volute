@@ -1,7 +1,4 @@
-use std::{
-    fmt,
-    ops::{BitAnd, BitOr, Not},
-};
+use std::{fmt, ops::BitOr};
 
 use crate::{ecube::Ecube, Lut};
 
@@ -18,7 +15,7 @@ impl Soes {
         self.num_vars
     }
 
-    /// Return the constant zero Sop
+    /// Return the constant zero Soes
     pub fn zero(num_vars: usize) -> Soes {
         Soes {
             num_vars,
@@ -26,7 +23,7 @@ impl Soes {
         }
     }
 
-    /// Return the constant one Sop
+    /// Return the constant one Soes
     pub fn one(num_vars: usize) -> Soes {
         Soes {
             num_vars,
@@ -34,12 +31,12 @@ impl Soes {
         }
     }
 
-    /// Number of cubes in the Sop
+    /// Number of cubes in the Soes
     pub fn num_cubes(&self) -> usize {
         self.cubes.len()
     }
 
-    /// Number of literals in the Sop
+    /// Number of literals in the Soes
     pub fn num_lits(&self) -> usize {
         let mut ret = 0;
         for c in &self.cubes {
@@ -48,12 +45,12 @@ impl Soes {
         ret
     }
 
-    /// Returns whether the Sop is trivially constant zero
+    /// Returns whether the Soes is trivially constant zero
     pub fn is_zero(&self) -> bool {
         self.cubes.is_empty()
     }
 
-    /// Returns whether the Sop is trivially constant one
+    /// Returns whether the Soes is trivially constant one
     pub fn is_one(&self) -> bool {
         match self.cubes.first() {
             Some(c) => c.is_one(),
@@ -61,7 +58,7 @@ impl Soes {
         }
     }
 
-    /// Return the Sop representing the nth variable
+    /// Return the Soes representing the nth variable
     pub fn nth_var(num_vars: usize, var: usize) -> Soes {
         Soes {
             num_vars,
@@ -77,12 +74,12 @@ impl Soes {
         }
     }
 
-    /// Returns the cubes in the Sop
+    /// Returns the cubes in the Soes
     pub fn cubes(&self) -> &[Ecube] {
         &self.cubes
     }
 
-    /// Get the value of the Sop for these inputs (input bits packed in the mask)
+    /// Get the value of the Soes for these inputs (input bits packed in the mask)
     pub fn value(&self, mask: usize) -> bool {
         let mut ret = false;
         for c in &self.cubes {
@@ -91,16 +88,15 @@ impl Soes {
         ret
     }
 
-    /// Compute the or of two Sops
+    /// Compute the or of two Soess
     fn or(a: &Soes, b: &Soes) -> Soes {
         assert_eq!(a.num_vars, b.num_vars);
         let mut cubes = a.cubes.clone();
         cubes.extend(&b.cubes);
-        let mut ret = Soes {
+        Soes {
             num_vars: a.num_vars,
             cubes,
-        };
-        ret
+        }
     }
 }
 
@@ -166,7 +162,7 @@ mod tests {
     use super::Soes;
 
     #[test]
-    fn test_sop_zero_one() {
+    fn test_zero_one() {
         assert!(Soes::zero(32).is_zero());
         assert!(!Soes::one(32).is_zero());
         assert!(!Soes::zero(32).is_one());

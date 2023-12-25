@@ -1,4 +1,4 @@
-//! Compact representation of And and Xor functions
+//! Compact representation of And functions
 
 use std::{fmt, ops::BitAnd};
 
@@ -202,7 +202,7 @@ mod tests {
     use super::Cube;
 
     #[test]
-    fn test_cube_zero_one() {
+    fn test_zero_one() {
         assert!(Cube::zero().is_zero());
         assert!(!Cube::one().is_zero());
         assert!(!Cube::zero().is_one());
@@ -216,7 +216,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cube_display() {
+    fn test_display() {
         assert_eq!(format!("{}", Cube::zero()), "0");
         assert_eq!(format!("{}", Cube::one()), "1");
         for i in 0..32 {
@@ -290,7 +290,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cube_and() {
+    fn test_and() {
         for i in 0..32 {
             let vi = Cube::nth_var(i);
             let vin = Cube::nth_var_inv(i);
@@ -309,7 +309,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cube_value() {
+    fn test_value() {
         for i in 0..32 {
             let vi = Cube::nth_var(i);
             let vin = Cube::nth_var_inv(i);
@@ -331,7 +331,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cube_num() {
+    fn test_num() {
         assert_eq!(Cube::all(0).count(), 1);
         assert_eq!(Cube::all(1).count(), 3);
         assert_eq!(Cube::all(2).count(), 9);

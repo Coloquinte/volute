@@ -1,11 +1,11 @@
-//! Compact representation of And and Xor functions
+//! Compact representation of Xor functions
 
 use std::{
     fmt,
     ops::{BitXor, Not},
 };
 
-/// Representation of the Xor of variables, similar to [`Cube`] for Xor
+/// Representation of the Xor of variables, similar to [`Cube`](crate::cube::Cube) for Xor
 ///
 /// Each variable is represented by a bit, and the overall parity (xor or xnor) is represented
 /// on the side.
@@ -186,7 +186,7 @@ mod tests {
     use super::Ecube;
 
     #[test]
-    fn test_xcube_zero_one() {
+    fn test_zero_one() {
         assert!(Ecube::zero().is_zero());
         assert!(!Ecube::one().is_zero());
         assert!(!Ecube::zero().is_one());
@@ -200,7 +200,7 @@ mod tests {
     }
 
     #[test]
-    fn test_xcube_display() {
+    fn test_display() {
         assert_eq!(format!("{}", Ecube::zero()), "0");
         assert_eq!(format!("{}", Ecube::one()), "1");
         for i in 0..32 {
@@ -235,7 +235,7 @@ mod tests {
     }
 
     #[test]
-    fn test_xcube_xor() {
+    fn test_xor() {
         for i in 0..32 {
             let vi = Ecube::nth_var(i);
             let vin = Ecube::nth_var_inv(i);
@@ -254,7 +254,7 @@ mod tests {
     }
 
     #[test]
-    fn test_xcube_value() {
+    fn test_value() {
         for i in 0..32 {
             let vi = Ecube::nth_var(i);
             let vin = Ecube::nth_var_inv(i);
@@ -273,7 +273,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cube_num() {
+    fn test_num() {
         assert_eq!(Ecube::all(0).count(), 2);
         assert_eq!(Ecube::all(1).count(), 4);
         assert_eq!(Ecube::all(2).count(), 8);

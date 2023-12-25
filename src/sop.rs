@@ -273,7 +273,7 @@ mod tests {
     use super::Sop;
 
     #[test]
-    fn test_sop_zero_one() {
+    fn test_zero_one() {
         assert!(Sop::zero(32).is_zero());
         assert!(!Sop::one(32).is_zero());
         assert!(!Sop::zero(32).is_one());
@@ -288,7 +288,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "rand")]
-    fn test_sop_not() {
+    fn test_not() {
         use crate::Lut;
 
         for i in 0..8 {
@@ -304,7 +304,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "rand")]
-    fn test_sop_or() {
+    fn test_or() {
         use crate::Lut;
 
         for i in 0..8 {
@@ -322,7 +322,7 @@ mod tests {
 
     #[test]
     #[cfg(feature = "rand")]
-    fn test_sop_and() {
+    fn test_and() {
         use crate::Lut;
 
         for i in 0..8 {
