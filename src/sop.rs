@@ -100,6 +100,9 @@ impl Sop {
     fn simplify(&mut self) {
         // No need for zeros
         self.cubes.retain(|c| !c.is_zero());
+        // Remove any duplicate cube the easy way
+        self.cubes.sort();
+        self.cubes.dedup();
         // Remove any cube that implies another
         // TODO
     }
@@ -288,7 +291,7 @@ mod tests {
     fn test_sop_not() {
         use crate::Lut;
 
-        for i in 0..5 {
+        for i in 0..8 {
             for _ in 0..10 {
                 let l = Lut::random(i);
                 let ln = !&l;
@@ -304,7 +307,7 @@ mod tests {
     fn test_sop_or() {
         use crate::Lut;
 
-        for i in 0..5 {
+        for i in 0..8 {
             for _ in 0..10 {
                 let l1 = Lut::random(i);
                 let l2 = Lut::random(i);
@@ -322,7 +325,7 @@ mod tests {
     fn test_sop_and() {
         use crate::Lut;
 
-        for i in 0..5 {
+        for i in 0..8 {
             for _ in 0..10 {
                 let l1 = Lut::random(i);
                 let l2 = Lut::random(i);
