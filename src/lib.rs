@@ -46,6 +46,7 @@ mod decomposition;
 pub mod ecube;
 mod lut;
 mod operations;
+mod soes;
 mod sop;
 mod static_lut;
 

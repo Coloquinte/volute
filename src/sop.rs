@@ -5,7 +5,7 @@ use std::{
 
 use crate::{cube::Cube, Lut};
 
-/// Sum of products representation (Or of And)
+/// Sum of Products representation (Or of And)
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Sop {
     num_vars: usize,
@@ -270,7 +270,7 @@ impl From<Sop> for Lut {
 
 #[cfg(test)]
 mod tests {
-    use crate::Sop;
+    use super::Sop;
 
     #[test]
     fn test_sop_zero_one() {
