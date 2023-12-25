@@ -43,6 +43,7 @@ mod bdd;
 mod canonization;
 pub mod cube;
 mod decomposition;
+pub mod ecube;
 mod lut;
 mod operations;
 mod sop;
