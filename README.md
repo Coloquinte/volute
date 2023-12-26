@@ -5,11 +5,11 @@
 
 Logic function manipulation using truth tables (LUTs)
 
-The crate implements truth table datastructures, either arbitrary-size Luts
+The crate implements truth table datastructures, either arbitrary-size truth tables
 ([`Lut`](https://docs.rs/volute/latest/volute/struct.Lut.html)), or more efficient
-fixed-size Luts ([`Lut2` to `Lut12`](https://docs.rs/volute/latest/volute/struct.StaticLut.html)).
+fixed-size truth tables ([`Lut2` to `Lut12`](https://docs.rs/volute/latest/volute/struct.StaticLut.html)).
 They provide logical operators and utility functions for analysis, canonization and decomposition.
-Some support is available for other standard representation, such as SoPs
+Some support is available for other standard representation, such as Sum-of-Products
 ([`Sop`](https://docs.rs/volute/latest/volute/struct.Sop.html)).
 
 API and documentation try to follow the same terminology as the C++ library [Kitty](https://libkitty.readthedocs.io/en/latest).
