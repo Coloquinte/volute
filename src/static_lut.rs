@@ -618,7 +618,7 @@ impl From<u32> for Lut5 {
 
 impl From<u64> for Lut6 {
     fn from(table: u64) -> Lut6 {
-        Lut6::from_blocks(&[table as u64])
+        Lut6::from_blocks(&[table])
     }
 }
 
