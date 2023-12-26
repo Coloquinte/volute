@@ -6,6 +6,10 @@ use std::{
 use crate::{cube::Cube, Lut};
 
 /// Sum of Products representation (Or of And)
+///
+/// This is the usual representation for 2-level logic optimization. Any boolean function can be
+/// represented this way, and the optimization can be done quite efficiently (with
+/// [Espresso](https://en.wikipedia.org/wiki/Espresso_heuristic_logic_minimizer), for example).
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Sop {
     num_vars: usize,
@@ -96,7 +100,9 @@ impl Sop {
     /// The following simplifications are performed:
     ///   * Zero cubes are removed
     ///   * Cubes that imply another are removed
-    ///   * Some cubes that differ by one literal are merged
+    ///
+    /// The following are not yet implemented:
+    ///   * Cubes that differ by one literal are merged
     fn simplify(&mut self) {
         // No need for zeros
         self.cubes.retain(|c| !c.is_zero());

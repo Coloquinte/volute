@@ -3,6 +3,9 @@ use std::{fmt, ops::BitOr};
 use crate::{ecube::Ecube, Lut};
 
 /// Sum of Exclusive Sums representation (Or of Xor)
+///
+/// Not all boolean functions can be represented this way (for example, a & b cannot).
+/// This can still be a useful representation to optimize logic containing Xor gates.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct Soes {
     num_vars: usize,
