@@ -104,7 +104,13 @@ impl Sop {
         self.cubes.sort();
         self.cubes.dedup();
         // Remove any cube that implies another
-        // TODO
+        let mut new_cubes = Vec::new();
+        for c in &self.cubes {
+            if self.cubes.iter().all(|o| *c == *o || !c.implies(*o)) {
+                new_cubes.push(*c);
+            }
+        }
+        self.cubes = new_cubes;
     }
 
     /// Compute the or of two Sops
