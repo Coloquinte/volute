@@ -50,6 +50,9 @@ mod soes;
 mod sop;
 mod static_lut;
 
+#[cfg(feature = "optim-mip")]
+pub mod optim_mip;
+
 pub use cube::Cube;
 pub use decomposition::DecompositionType;
 pub use ecube::Ecube;

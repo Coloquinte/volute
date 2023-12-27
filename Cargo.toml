@@ -15,10 +15,12 @@ categories = ["mathematics", "algorithms"]
 
 [dependencies]
 rand = { version = "0.8.5", optional = true }
+good_lp = { version = "1.7", features = ["highs"], default-features = false, optional = true }
 
 [features]
 default = ["rand"]
 rand = ["dep:rand"]
+optim-mip = ["dep:good_lp"]
 
 [dev-dependencies]
 criterion = "0.5"
