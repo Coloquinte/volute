@@ -254,8 +254,8 @@ impl fmt::Display for Sop {
     }
 }
 
-impl From<Lut> for Sop {
-    fn from(value: Lut) -> Self {
+impl From<&Lut> for Sop {
+    fn from(value: &Lut) -> Self {
         let mut ret = Sop::zero(value.num_vars());
         let mx = value.num_bits();
         for mask in 0..mx {
@@ -267,8 +267,14 @@ impl From<Lut> for Sop {
     }
 }
 
-impl From<Sop> for Lut {
-    fn from(value: Sop) -> Self {
+impl From<Lut> for Sop {
+    fn from(value: Lut) -> Self {
+        Sop::from(&value)
+    }
+}
+
+impl From<&Sop> for Lut {
+    fn from(value: &Sop) -> Self {
         let mut ret = Lut::zero(value.num_vars());
         let mx = ret.num_bits();
         for mask in 0..mx {
@@ -277,6 +283,12 @@ impl From<Sop> for Lut {
             }
         }
         ret
+    }
+}
+
+impl From<Sop> for Lut {
+    fn from(value: Sop) -> Self {
+        Lut::from(&value)
     }
 }
 

@@ -147,8 +147,8 @@ impl fmt::Display for Soes {
     }
 }
 
-impl From<Soes> for Lut {
-    fn from(value: Soes) -> Self {
+impl From<&Soes> for Lut {
+    fn from(value: &Soes) -> Self {
         let mut ret = Lut::zero(value.num_vars());
         let mx = ret.num_bits();
         for mask in 0..mx {
@@ -157,6 +157,12 @@ impl From<Soes> for Lut {
             }
         }
         ret
+    }
+}
+
+impl From<Soes> for Lut {
+    fn from(value: Soes) -> Self {
+        Lut::from(&value)
     }
 }
 
