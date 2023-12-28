@@ -112,7 +112,12 @@ impl Cube {
         (0..32).filter(|v| (self.neg >> v & 1) != 0)
     }
 
-    /// Returns whether the cube implies another. This is used for Sop simplification
+    /// Returns whether the cube intersects another
+    pub fn intersects(&self, o: Cube) -> bool {
+        self & o != Cube::zero()
+    }
+
+    /// Returns whether the cube implies another
     pub fn implies(&self, o: Cube) -> bool {
         self.pos | o.pos == self.pos && self.neg | o.neg == self.neg
     }
@@ -336,5 +341,25 @@ mod tests {
         assert_eq!(Cube::all(1).count(), 3);
         assert_eq!(Cube::all(2).count(), 9);
         assert_eq!(Cube::all(3).count(), 27);
+    }
+
+    #[test]
+    fn test_intersects() {
+        for i in 0..32 {
+            let vi = Cube::nth_var(i);
+            let vin = Cube::nth_var_inv(i);
+            assert!(vi.intersects(vi));
+            assert!(vin.intersects(vin));
+            assert!(!vin.intersects(vi));
+            assert!(!vi.intersects(vin));
+            for j in i + 1..32 {
+                let vj = Cube::nth_var(j);
+                let vjn = Cube::nth_var_inv(j);
+                assert!(vi.intersects(vj));
+                assert!(vin.intersects(vj));
+                assert!(vi.intersects(vjn));
+                assert!(vin.intersects(vjn));
+            }
+        }
     }
 }
