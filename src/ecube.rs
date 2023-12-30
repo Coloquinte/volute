@@ -5,6 +5,8 @@ use std::{
     ops::{BitXor, Not},
 };
 
+use crate::Lut;
+
 /// Representation of the Xor of variables, similar to [`Cube`](crate::cube::Cube) for Xor
 ///
 /// Each variable is represented by a bit, and the overall parity (xor or xnor) is represented
@@ -85,6 +87,16 @@ impl Ecube {
     /// Returns the variables in the cube
     pub fn vars(&self) -> impl Iterator<Item = usize> + '_ {
         (0..32).filter(|v| (self.vars >> v & 1) != 0)
+    }
+
+    /// Return whether the cube implies the given Lut
+    pub fn implies_lut(&self, lut: &Lut) -> bool {
+        for i in 0..lut.num_bits() {
+            if self.value(i) && !lut.value(i) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /// Return all possible cubes with a given number of variables

@@ -81,6 +81,19 @@ impl Sop {
         }
     }
 
+    /// Build an Sop from cubes
+    pub fn from_cubes(num_vars: usize, cubes: Vec<Cube>) -> Sop {
+        for c in &cubes {
+            for v in c.pos_vars() {
+                assert!(v < num_vars);
+            }
+            for v in c.neg_vars() {
+                assert!(v < num_vars);
+            }
+        }
+        Sop { num_vars, cubes }
+    }
+
     /// Returns the cubes in the Sop
     pub fn cubes(&self) -> &[Cube] {
         &self.cubes

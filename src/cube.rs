@@ -2,6 +2,8 @@
 
 use std::{fmt, ops::BitAnd};
 
+use crate::Lut;
+
 /// Representation of the And of variables (a cube in sum-of-products formulations)
 ///
 /// Each variable is represented by a pair of bits, representing respectively the positive
@@ -120,6 +122,16 @@ impl Cube {
     /// Returns whether the cube implies another
     pub fn implies(&self, o: Cube) -> bool {
         self.pos | o.pos == self.pos && self.neg | o.neg == self.neg
+    }
+
+    /// Return whether the cube implies the given Lut
+    pub fn implies_lut(&self, lut: &Lut) -> bool {
+        for i in 0..lut.num_bits() {
+            if self.value(i) && !lut.value(i) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /// Perform the and operation on two cubes
