@@ -1,6 +1,6 @@
 [package]
 name = "volute"
-version = "1.0.5"
+version = "1.0.6"
 edition = "2021"
 
 authors = ["Gabriel Gouvine <gabriel.gouvine_cargo@m4x.org>"]

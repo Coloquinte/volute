@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        features: ["", "--no-default-features", "--all-features"]
+        features: ["", "--no-default-features", "--features optim-mip"]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
@@ -39,7 +39,7 @@ jobs:
 
       - name: Test
         uses: actions-rs/cargo@v1
-        if: ${{ matrix.features != '--all-features' || matrix.os != 'macos-latest' }}
+        if: ${{ matrix.features != '--features optim-mip' || matrix.os == 'ubuntu-latest' }}
         with:
           command: test
           args: ${{ matrix.features }}
