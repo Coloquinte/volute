@@ -1,4 +1,4 @@
-//! Optimization of boolean function representation using a MIP solver
+//! Optimization of boolean function representation using mathematical programming
 
 use std::iter::zip;
 
@@ -306,11 +306,11 @@ impl<'a> SopModeler<'a> {
     }
 }
 
-/// Optimize a Lut as a Sum of Products (Or of Ands)
+/// Optimize a Lut as a Sum of Products (Or of Ands) using Mixed-Integer Programming
 ///
 /// This is a typical 2-level optimization. The objective is to minimize the total cost of the
 /// gates. Possible cost reductions by sharing intermediate And gates are ignored.
-pub fn optimize_sop(functions: &[Lut], and_cost: i32, or_cost: i32) -> Vec<Sop> {
+pub fn optimize_sop_mip(functions: &[Lut], and_cost: i32, or_cost: i32) -> Vec<Sop> {
     let opt = SopModeler::run(functions, and_cost, -1, or_cost);
     opt.into_iter()
         .map(|(sop, soes)| {
@@ -320,11 +320,11 @@ pub fn optimize_sop(functions: &[Lut], and_cost: i32, or_cost: i32) -> Vec<Sop> 
         .collect()
 }
 
-/// Optimize a Lut as a Sum of Products and Exclusive Sums (Or of Ands and Xors)
+/// Optimize a Lut as a Sum of Products and Exclusive Sums (Or of Ands and Xors) using Mixed-Integer Programming
 ///
 /// This is a more advanced form of 2-level optimization. The objective is to minimize the total cost of the
 /// gates. Possible cost reductions by sharing intermediate And and Xor gates are ignored.
-pub fn optimize_sopes(
+pub fn optimize_sopes_mip(
     functions: &[Lut],
     and_cost: i32,
     xor_cost: i32,
@@ -335,7 +335,7 @@ pub fn optimize_sopes(
 
 #[cfg(test)]
 mod tests {
-    use crate::{optim_mip::optimize_sop, optim_mip::optimize_sopes, Lut};
+    use crate::{optim::optimize_sop_mip, optim::optimize_sopes_mip, Lut};
 
     #[test]
     #[cfg(feature = "rand")]
@@ -347,7 +347,7 @@ mod tests {
                     for _ in 0..num_luts {
                         luts.push(Lut::random(num_vars));
                     }
-                    optimize_sop(&luts, 1, 1);
+                    optimize_sop_mip(&luts, 1, 1);
                 }
             }
         }
@@ -356,22 +356,22 @@ mod tests {
     #[test]
     fn test_simple_sop_optim() {
         let l1 = Lut::nth_var(5, 1) & Lut::nth_var(5, 2);
-        let opt1 = optimize_sop(&[l1], 1, 1);
+        let opt1 = optimize_sop_mip(&[l1], 1, 1);
         assert_eq!(opt1[0].num_cubes(), 1);
         assert_eq!(opt1[0].num_lits(), 2);
 
         let l2 = Lut::nth_var(5, 1) | Lut::nth_var(5, 2);
-        let opt2 = optimize_sop(&[l2], 1, 1);
+        let opt2 = optimize_sop_mip(&[l2], 1, 1);
         assert_eq!(opt2[0].num_cubes(), 2);
         assert_eq!(opt2[0].num_lits(), 2);
 
         let l3 = Lut::nth_var(5, 1) | (Lut::nth_var(5, 2) & !Lut::nth_var(5, 3));
-        let opt3 = optimize_sop(&[l3], 1, 1);
+        let opt3 = optimize_sop_mip(&[l3], 1, 1);
         assert_eq!(opt3[0].num_cubes(), 2);
         assert_eq!(opt3[0].num_lits(), 3);
 
         let l4 = Lut::nth_var(5, 1) | Lut::nth_var(5, 2);
-        let opt3 = optimize_sop(&[l4], 1, 1);
+        let opt3 = optimize_sop_mip(&[l4], 1, 1);
         assert_eq!(opt3[0].num_cubes(), 2);
         assert_eq!(opt3[0].num_lits(), 2);
     }
@@ -386,7 +386,7 @@ mod tests {
                     for _ in 0..num_luts {
                         luts.push(Lut::random(num_vars));
                     }
-                    optimize_sopes(&luts, 1, 2, 1);
+                    optimize_sopes_mip(&luts, 1, 2, 1);
                 }
             }
         }
@@ -395,7 +395,7 @@ mod tests {
     #[test]
     fn test_simple_sopes_optim() {
         let l1 = Lut::nth_var(5, 1) ^ Lut::nth_var(5, 2) ^ Lut::nth_var(5, 3);
-        let opt1 = optimize_sopes(&[l1], 1, 1, 1);
+        let opt1 = optimize_sopes_mip(&[l1], 1, 1, 1);
         assert_eq!(opt1[0].0.num_cubes(), 0);
         assert_eq!(opt1[0].0.num_lits(), 0);
         assert_eq!(opt1[0].1.num_cubes(), 1);
