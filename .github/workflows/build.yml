@@ -39,7 +39,7 @@ jobs:
 
       - name: Test
         uses: actions-rs/cargo@v1
-        if: ${{ matrix.features != '--features optim-mip' || matrix.os == 'ubuntu-latest' }}
+        if: ${{ matrix.features != '--features optim-mip' || matrix.os != 'macos-latest' }}
         with:
           command: test
           args: ${{ matrix.features }}
