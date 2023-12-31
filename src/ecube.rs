@@ -1,6 +1,7 @@
 //! Compact representation of Xor functions
 
 use std::{
+    cmp::max,
     fmt,
     ops::{BitXor, Not},
 };
@@ -82,6 +83,11 @@ impl Ecube {
     /// Return the number of literals
     pub fn num_lits(&self) -> usize {
         self.vars.count_ones() as usize
+    }
+
+    /// Return the number of Xor2 gates necessary to implement the cube
+    pub fn num_gates(&self) -> usize {
+        return max(self.num_lits(), 1) - 1;
     }
 
     /// Returns the variables in the cube

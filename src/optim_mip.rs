@@ -1,6 +1,5 @@
 //! Optimization of boolean function representation using a MIP solver
 
-use std::cmp::max;
 use std::iter::zip;
 
 use good_lp::default_solver;
@@ -62,14 +61,22 @@ struct SopModeler<'a> {
     functions: &'a [Lut],
     /// Cost of And gates
     and_cost: i32,
+    /// Cost of Xor gates
+    xor_cost: i32,
     /// Cost of Or gates
     or_cost: i32,
     /// All cubes considered for the problem
     cubes: Vec<Cube>,
+    /// All exclusive cubes considered for the problem
+    ecubes: Vec<Ecube>,
     /// Whether the corresponding cube is used at all
     cube_used: Vec<Variable>,
+    /// Whether the corresponding exclusive cube is used at all
+    ecube_used: Vec<Variable>,
     /// Whether the corresponding cube is used for this function
     cube_used_in_fn: Vec<Vec<Variable>>,
+    /// Whether the corresponding exclusive cube is used for this function
+    ecube_used_in_fn: Vec<Vec<Variable>>,
     /// Number of cubes used in the function
     num_cubes_in_fn: Vec<Expression>,
     /// Number of or used in the function
@@ -84,14 +91,18 @@ struct SopModeler<'a> {
 
 impl<'a> SopModeler<'a> {
     /// Initial creation of the modeler
-    fn new(functions: &[Lut], and_cost: i32, or_cost: i32) -> SopModeler {
+    fn new(functions: &[Lut], and_cost: i32, xor_cost: i32, or_cost: i32) -> SopModeler {
         SopModeler {
             functions,
             and_cost,
+            xor_cost,
             or_cost,
             cubes: Vec::new(),
+            ecubes: Vec::new(),
             cube_used: Vec::new(),
+            ecube_used: Vec::new(),
             cube_used_in_fn: Vec::new(),
+            ecube_used_in_fn: Vec::new(),
             num_cubes_in_fn: Vec::new(),
             num_or_in_fn: Vec::new(),
             vars: variables!(),
@@ -109,23 +120,45 @@ impl<'a> SopModeler<'a> {
         assert!(self.or_cost >= 1);
     }
 
+    /// Build a 2D array of binary variables (N x functions.len())
+    fn build_function_variables(&mut self, n: usize) -> Vec<Vec<Variable>> {
+        let mut ret = Vec::new();
+        for _ in 0..n {
+            let mut fn_vars = Vec::new();
+            for _ in self.functions {
+                fn_vars.push(self.vars.add(variable().binary()));
+            }
+            ret.push(fn_vars);
+        }
+        ret
+    }
+
     /// Setup main decision variables
     fn setup_vars(&mut self) {
         self.cubes = enumerate_valid_cubes_multi(self.functions);
-        for _ in &self.cubes {
-            self.cube_used.push(self.vars.add(variable().binary()));
+        if self.xor_cost >= 0 {
+            self.ecubes = enumerate_valid_ecubes_multi(self.functions);
         }
-        for _ in &self.cubes {
-            let mut used_in_fn = Vec::new();
-            for _ in self.functions {
-                used_in_fn.push(self.vars.add(variable().binary()));
-            }
-            self.cube_used_in_fn.push(used_in_fn);
-        }
+        self.cube_used = self
+            .cubes
+            .iter()
+            .map(|_| self.vars.add(variable().binary()))
+            .collect();
+        self.ecube_used = self
+            .ecubes
+            .iter()
+            .map(|_| self.vars.add(variable().binary()))
+            .collect();
+        self.cube_used_in_fn = self.build_function_variables(self.cubes.len());
+        self.ecube_used_in_fn = self.build_function_variables(self.ecubes.len());
+
         for j in 0..self.functions.len() {
             let mut num_cubes = Expression::from(0);
             for i in 0..self.cubes.len() {
                 num_cubes += self.cube_used_in_fn[i][j];
+            }
+            for i in 0..self.ecubes.len() {
+                num_cubes += self.ecube_used_in_fn[i][j];
             }
             let num_or = self.vars.add(variable().min(0));
             self.num_or_in_fn.push(num_or);
@@ -136,8 +169,14 @@ impl<'a> SopModeler<'a> {
 
     /// Cost of a cube
     fn cube_cost(&self, i: usize) -> i32 {
-        let c = self.cubes[i];
-        (max(c.num_lits(), 1) - 1) as i32
+        let num = self.cubes[i].num_gates() as i32;
+        num * self.and_cost
+    }
+
+    /// Cost of an exclusive cube
+    fn ecube_cost(&self, i: usize) -> i32 {
+        let num = self.ecubes[i].num_gates() as i32;
+        num * self.xor_cost
     }
 
     /// Define the objective
@@ -146,6 +185,10 @@ impl<'a> SopModeler<'a> {
         // Cost of each used cube
         for i in 0..self.cubes.len() {
             expr += self.cube_cost(i) * self.cube_used[i];
+        }
+        // Cost of each exclusive cube
+        for i in 0..self.ecubes.len() {
+            expr += self.ecube_cost(i) * self.ecube_used[i];
         }
         // Cost of each Or
         for i in 0..self.functions.len() {
@@ -160,6 +203,10 @@ impl<'a> SopModeler<'a> {
             for i in 0..self.cubes.len() {
                 self.constraints
                     .push((self.cube_used_in_fn[i][j] - self.cube_used[i]).leq(0));
+            }
+            for i in 0..self.ecubes.len() {
+                self.constraints
+                    .push((self.ecube_used_in_fn[i][j] - self.ecube_used[i]).leq(0));
             }
         }
     }
@@ -177,6 +224,11 @@ impl<'a> SopModeler<'a> {
                         expr += self.cube_used_in_fn[i][j];
                     }
                 }
+                for (i, c) in self.ecubes.iter().enumerate() {
+                    if c.value(b) {
+                        expr += self.ecube_used_in_fn[i][j];
+                    }
+                }
                 self.constraints.push(expr.geq(1));
             }
         }
@@ -184,18 +236,24 @@ impl<'a> SopModeler<'a> {
 
     /// Ensure that the function off-set is not touched
     fn add_off_set_constraints(&mut self) {
-        for (i, c) in self.cubes.iter().enumerate() {
-            for (j, f) in self.functions.iter().enumerate() {
+        for (j, f) in self.functions.iter().enumerate() {
+            for (i, c) in self.cubes.iter().enumerate() {
                 if !c.implies_lut(f) {
                     self.constraints
                         .push((1.0 * self.cube_used_in_fn[i][j]).leq(0));
+                }
+            }
+            for (i, c) in self.ecubes.iter().enumerate() {
+                if !c.implies_lut(f) {
+                    self.constraints
+                        .push((1.0 * self.ecube_used_in_fn[i][j]).leq(0));
                 }
             }
         }
     }
 
     /// Solve the problem
-    fn solve(self) -> Vec<Sop> {
+    fn solve(self) -> Vec<(Sop, Soes)> {
         let mut pb = self
             .vars
             .minimise(self.objective.clone())
@@ -213,14 +271,26 @@ impl<'a> SopModeler<'a> {
                     cubes.push(self.cubes[i]);
                 }
             }
-            ret.push(Sop::from_cubes(self.functions[j].num_vars(), cubes));
+            let mut ecubes = Vec::new();
+            for i in 0..self.ecubes.len() {
+                let is_used = solution.value(self.ecube_used_in_fn[i][j]) > 0.5;
+                if is_used {
+                    ecubes.push(self.ecubes[i]);
+                }
+            }
+            let sop = Sop::from_cubes(self.functions[j].num_vars(), cubes);
+            let soes = Soes::from_cubes(self.functions[j].num_vars(), ecubes);
+            if self.xor_cost < 0 {
+                assert_eq!(soes.num_cubes(), 0);
+            }
+            ret.push((sop, soes));
         }
         ret
     }
 
     /// Run the whole optimization
-    pub fn run(functions: &[Lut], and_cost: i32, or_cost: i32) -> Vec<Sop> {
-        let mut modeler = SopModeler::new(functions, and_cost, or_cost);
+    pub fn run(functions: &[Lut], and_cost: i32, xor_cost: i32, or_cost: i32) -> Vec<(Sop, Soes)> {
+        let mut modeler = SopModeler::new(functions, and_cost, xor_cost, or_cost);
         modeler.setup_vars();
         modeler.check();
         modeler.setup_objective();
@@ -228,8 +298,9 @@ impl<'a> SopModeler<'a> {
         modeler.add_off_set_constraints();
         modeler.add_on_set_constraints();
         let ret = modeler.solve();
-        for (sop, lut) in zip(&ret, functions) {
-            assert_eq!(&Lut::from(sop), lut);
+        for ((sop, soes), lut) in zip(&ret, functions) {
+            let val = Lut::from(sop) | Lut::from(soes);
+            assert_eq!(&val, lut);
         }
         ret
     }
@@ -240,10 +311,15 @@ impl<'a> SopModeler<'a> {
 /// This is a typical 2-level optimization. The objective is to minimize the total cost of the
 /// gates. Possible cost reductions by sharing intermediate And gates are ignored.
 pub fn optimize_sop(functions: &[Lut], and_cost: i32, or_cost: i32) -> Vec<Sop> {
-    SopModeler::run(functions, and_cost, or_cost)
+    let opt = SopModeler::run(functions, and_cost, -1, or_cost);
+    opt.into_iter()
+        .map(|(sop, soes)| {
+            assert_eq!(soes.num_cubes(), 0);
+            sop
+        })
+        .collect()
 }
 
-/*
 /// Optimize a Lut as a Sum of Products and Exclusive Sums (Or of Ands and Xors)
 ///
 /// This is a more advanced form of 2-level optimization. The objective is to minimize the total cost of the
@@ -254,25 +330,16 @@ pub fn optimize_sopes(
     xor_cost: i32,
     or_cost: i32,
 ) -> Vec<(Sop, Soes)> {
-    let cubes = enumerate_valid_cubes_multi(functions);
-    let ecubes = enumerate_valid_ecubes_multi(functions);
-
-    // TODO: enumerate constraints
-    let mut ret = Vec::new();
-    for f in functions {
-        ret.push((Sop::from(f), Soes::zero(f.num_vars())));
-    }
-    ret
+    SopModeler::run(functions, and_cost, xor_cost, or_cost)
 }
-*/
 
 #[cfg(test)]
 mod tests {
-    use crate::{optim_mip::optimize_sop, Lut};
+    use crate::{optim_mip::optimize_sop, optim_mip::optimize_sopes, Lut};
 
     #[test]
     #[cfg(feature = "rand")]
-    fn test_random_optim() {
+    fn test_random_sop_optim() {
         for num_vars in 0..5 {
             for num_luts in 1..5 {
                 for _ in 0..10 {
@@ -287,7 +354,7 @@ mod tests {
     }
 
     #[test]
-    fn test_simple_optim() {
+    fn test_simple_sop_optim() {
         let l1 = Lut::nth_var(5, 1) & Lut::nth_var(5, 2);
         let opt1 = optimize_sop(&[l1], 1, 1);
         assert_eq!(opt1[0].num_cubes(), 1);
@@ -302,5 +369,36 @@ mod tests {
         let opt3 = optimize_sop(&[l3], 1, 1);
         assert_eq!(opt3[0].num_cubes(), 2);
         assert_eq!(opt3[0].num_lits(), 3);
+
+        let l4 = Lut::nth_var(5, 1) | Lut::nth_var(5, 2);
+        let opt3 = optimize_sop(&[l4], 1, 1);
+        assert_eq!(opt3[0].num_cubes(), 2);
+        assert_eq!(opt3[0].num_lits(), 2);
+    }
+
+    #[test]
+    #[cfg(feature = "rand")]
+    fn test_random_sopes_optim() {
+        for num_vars in 0..5 {
+            for num_luts in 1..5 {
+                for _ in 0..10 {
+                    let mut luts = Vec::new();
+                    for _ in 0..num_luts {
+                        luts.push(Lut::random(num_vars));
+                    }
+                    optimize_sopes(&luts, 1, 2, 1);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_simple_sopes_optim() {
+        let l1 = Lut::nth_var(5, 1) ^ Lut::nth_var(5, 2) ^ Lut::nth_var(5, 3);
+        let opt1 = optimize_sopes(&[l1], 1, 1, 1);
+        assert_eq!(opt1[0].0.num_cubes(), 0);
+        assert_eq!(opt1[0].0.num_lits(), 0);
+        assert_eq!(opt1[0].1.num_cubes(), 1);
+        assert_eq!(opt1[0].1.num_lits(), 3);
     }
 }

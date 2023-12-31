@@ -77,6 +77,16 @@ impl Soes {
         }
     }
 
+    /// Build an Soes from cubes
+    pub fn from_cubes(num_vars: usize, cubes: Vec<Ecube>) -> Soes {
+        for c in &cubes {
+            for v in c.vars() {
+                assert!(v < num_vars);
+            }
+        }
+        Soes { num_vars, cubes }
+    }
+
     /// Returns the cubes in the Soes
     pub fn cubes(&self) -> &[Ecube] {
         &self.cubes
