@@ -51,6 +51,7 @@ fn enumerate_valid_ecubes_multi(functions: &[Lut]) -> Vec<Ecube> {
     for f in functions {
         cubes.extend(enumerate_valid_ecubes(f));
     }
+    cubes.retain(|c| c.num_lits() >= 2);
     cubes.sort();
     cubes.dedup();
     cubes
