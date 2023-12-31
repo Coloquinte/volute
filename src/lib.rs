@@ -30,6 +30,16 @@
 //! assert_eq!(lut.to_string(), "Lut4(a0a0)");
 //! ```
 //!
+//! Create a random Lut6 (six variables).
+//! Display its hexadecimal value.
+//! ```
+//! # use volute::Lut6;
+//! # #[cfg(feature = "rand")]
+//! let lut = Lut6::random();
+//! # #[cfg(feature = "rand")]
+//! print!("{}", lut);
+//! ```
+//!
 //! Create the parity function on three variables, and check that in can be decomposed as a Xor.
 //! Check its value in binary.
 //! ```

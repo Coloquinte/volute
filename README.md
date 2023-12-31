@@ -1,5 +1,6 @@
-![crates.io](https://img.shields.io/crates/v/volute.svg)
-![Build](https://github.com/Coloquinte/volute/actions/workflows/build.yml/badge.svg)
+[![Volute crate](https://img.shields.io/crates/v/volute.svg)](https://crates.io/crates/volute)
+[![Volute documentation](https://docs.rs/volute/badge.svg)](https://docs.rs/volute)
+[![Build status](https://github.com/Coloquinte/volute/actions/workflows/build.yml/badge.svg)](https://github.com/Coloquinte/volute/actions/workflows/build.yml)
 
 <!-- cargo-rdme start -->
 
@@ -28,6 +29,13 @@ Check its hexadecimal value.
 ```rust
 let lut = Lut4::nth_var(0) & Lut4::nth_var(2);
 assert_eq!(lut.to_string(), "Lut4(a0a0)");
+```
+
+Create a random Lut6 (six variables).
+Display its hexadecimal value.
+```rust
+let lut = Lut6::random();
+print!("{}", lut);
 ```
 
 Create the parity function on three variables, and check that in can be decomposed as a Xor.
