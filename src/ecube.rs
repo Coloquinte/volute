@@ -9,7 +9,7 @@ use crate::Lut;
 
 /// Representation of the Xor of variables, similar to [`Cube`](crate::cube::Cube) for Xor
 ///
-/// Each variable is represented by a bit, and the overall parity (xor or xnor) is represented
+/// Each variable is represented by a bit, and the overall parity (Xor or Xnor) is represented
 /// on the side.
 ///
 /// It only supports Not and Xor operations. Anything else must be implemented by more complex

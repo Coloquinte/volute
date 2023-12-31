@@ -1,4 +1,5 @@
 #![warn(missing_docs)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 //! Logic function manipulation using truth tables (LUTs)
 //!
@@ -51,6 +52,7 @@ mod sop;
 mod static_lut;
 
 #[cfg(feature = "optim-mip")]
+#[cfg_attr(docsrs, doc(cfg(feature = "optim-mip")))]
 pub mod optim_mip;
 
 pub use cube::Cube;

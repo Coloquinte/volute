@@ -31,3 +31,9 @@ criterion = "0.5"
 [[bench]]
 name = "canonization"
 harness = false
+
+[package.metadata.docs.rs]
+# Document all features
+all-features = true
+# Used to enable doc_cfg in nightly
+rustdoc-args = ["--cfg", "docsrs"]

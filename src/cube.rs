@@ -4,7 +4,7 @@ use std::{fmt, ops::BitAnd};
 
 use crate::Lut;
 
-/// Representation of the And of variables (a cube in sum-of-products formulations)
+/// Representation of the And of variables (a cube in Sum-of-Products representations)
 ///
 /// Each variable is represented by a pair of bits, representing respectively the positive
 /// and negative literal. If none is set, the variable is unused. If both are set, the cube is 0.
