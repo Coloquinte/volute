@@ -70,7 +70,7 @@ impl Soes {
         }
     }
 
-    /// Return the cube representing the nth variable, inverted
+    /// Return the Soes representing the nth variable, inverted
     pub fn nth_var_inv(num_vars: usize, var: usize) -> Soes {
         Soes {
             num_vars,
@@ -179,6 +179,7 @@ impl From<Soes> for Lut {
 
 #[cfg(test)]
 mod tests {
+    use super::Ecube;
     use super::Soes;
 
     #[test]
@@ -193,5 +194,17 @@ mod tests {
             assert!(!Soes::nth_var_inv(32, i).is_zero());
             assert!(!Soes::nth_var_inv(32, i).is_one());
         }
+    }
+
+    #[test]
+    fn test_display() {
+        let s = Soes::from_cubes(
+            6,
+            vec![
+                Ecube::from_vars(&[1, 2, 3], false),
+                Ecube::from_vars(&[2, 1, 5], true),
+            ],
+        );
+        assert_eq!(format!("{:}", s), "x1 ^ x2 ^ x3 | 1 ^ x1 ^ x2 ^ x5");
     }
 }

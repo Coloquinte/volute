@@ -74,7 +74,7 @@ impl Sop {
         }
     }
 
-    /// Return the cube representing the nth variable, inverted
+    /// Return the Sop representing the nth variable, inverted
     pub fn nth_var_inv(num_vars: usize, var: usize) -> Sop {
         Sop {
             num_vars,
@@ -308,6 +308,7 @@ impl From<Sop> for Lut {
 
 #[cfg(test)]
 mod tests {
+    use super::Cube;
     use super::Sop;
 
     #[test]
@@ -374,5 +375,17 @@ mod tests {
                 assert_eq!(lo, so.into());
             }
         }
+    }
+
+    #[test]
+    fn test_display() {
+        let s = Sop::from_cubes(
+            6,
+            vec![
+                Cube::from_vars(&[1, 2], &[3]),
+                Cube::from_vars(&[2, 1], &[0, 4, 5]),
+            ],
+        );
+        assert_eq!(format!("{:}", s), "x1x2!x3 | !x0x1x2!x4!x5");
     }
 }

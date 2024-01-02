@@ -5,6 +5,7 @@
 
 mod cube;
 mod ecube;
+mod esop;
 mod soes;
 mod sop;
 
@@ -14,5 +15,6 @@ pub mod optim;
 
 pub use cube::Cube;
 pub use ecube::Ecube;
+pub use esop::Esop;
 pub use soes::Soes;
 pub use sop::Sop;
