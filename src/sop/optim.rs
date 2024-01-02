@@ -427,24 +427,60 @@ impl<'a> EsopModeler<'a> {
         }
     }
 
+    /// Value constraint for a single bit of a function: the xor of the cubes must
+    /// be equal to the expected value
+    fn add_xor_constraint(&mut self, fn_index: usize, b: usize) {
+        let val = self.functions[fn_index].value(b);
+        let mut expr = Expression::from(if val { 1 } else { 0 });
+        for (i, c) in self.cubes.iter().enumerate() {
+            if c.value(b) {
+                expr += self.cube_used_in_fn[i][fn_index];
+            }
+        }
+        // One way to specify a Xor constraint is to force integrality of sum/2
+        // TODO: use a better encoding for the constraints
+        expr *= 0.5;
+        let v = self.vars.add(variable().integer());
+        expr += v;
+        self.constraints.push(expr.eq(0));
+    }
+
+    /// Constrain the difference between two bits for a function; this makes the constraint much
+    /// more sparse
+    fn add_xor_constraint_diff(&mut self, fn_index: usize, b1: usize, b2: usize) {
+        let val = self.functions[fn_index].value(b1) ^ self.functions[fn_index].value(b2);
+        let mut expr = Expression::from(if val { 1 } else { 0 });
+        for (i, c) in self.cubes.iter().enumerate() {
+            if c.value(b1) != c.value(b2) {
+                expr += self.cube_used_in_fn[i][fn_index];
+            }
+        }
+        // One way to specify a Xor constraint is to force integrality of sum/2
+        // TODO: use a better encoding for the constraints
+        expr *= 0.5;
+        let v = self.vars.add(variable().integer());
+        expr += v;
+        self.constraints.push(expr.eq(0));
+    }
+
     /// Value constraints for each functions based on the cubes used
     fn add_xor_constraints(&mut self) {
-        for (j, lut) in self.functions.iter().enumerate() {
+        for j in 0..self.functions.len() {
             for b in 0..self.functions[j].num_bits() {
-                let mut expr = Expression::from(if lut.value(b) { 1 } else { 0 });
-                for (i, c) in self.cubes.iter().enumerate() {
-                    if c.value(b) {
-                        expr += self.cube_used_in_fn[i][j];
-                    }
-                }
-                // One way to specify a Xor constraint is to force integrality of sum/2
-                // TODO: there is a lot to optimize here
-                //     * reduce the number of variables in each constraint
-                //     * use a better encoding for the constraints
-                expr *= 0.5;
-                let v = self.vars.add(variable().integer());
-                expr += v;
-                self.constraints.push(expr.eq(0));
+                self.add_xor_constraint(j, b);
+            }
+        }
+    }
+
+    /// Value constraints for each functions based on the cubes used, with sparser method
+    #[allow(dead_code)]
+    fn add_xor_constraints_with_diff(&mut self) {
+        for j in 0..self.functions.len() {
+            self.add_xor_constraint(j, 0);
+            for b1 in 1..self.functions[j].num_bits() {
+                // Other mask with one bit flipped
+                let b2 = b1 & (b1 - 1);
+                self.add_xor_constraint_diff(j, b1, b2);
             }
         }
     }
