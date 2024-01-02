@@ -18,6 +18,8 @@ use crate::sop::Soes;
 use crate::sop::Sop;
 use crate::Lut;
 
+use super::Esop;
+
 /// Enumerate cubes that can be used to implement the given function. That is, cubes that are imply the function
 fn enumerate_valid_cubes(function: &Lut) -> Vec<Cube> {
     Cube::all(function.num_vars())
@@ -119,6 +121,7 @@ impl<'a> SopModeler<'a> {
         }
         assert!(self.and_cost >= 1);
         assert!(self.or_cost >= 1);
+        assert!(self.xor_cost == -1 || self.xor_cost >= 1);
     }
 
     /// Build a 2D array of binary variables (N x functions.len())
@@ -198,7 +201,7 @@ impl<'a> SopModeler<'a> {
         self.objective = expr;
     }
 
-    /// Propagate usage
+    /// Force cube_used if cube_used_in_fn is set
     fn add_cover_constraints(&mut self) {
         for j in 0..self.functions.len() {
             for i in 0..self.cubes.len() {
@@ -307,6 +310,186 @@ impl<'a> SopModeler<'a> {
     }
 }
 
+struct EsopModeler<'a> {
+    /// Functions of the problem
+    functions: &'a [Lut],
+    /// Cost of And gates
+    and_cost: i32,
+    /// Cost of Xor gates
+    xor_cost: i32,
+    /// All cubes considered for the problem
+    cubes: Vec<Cube>,
+    /// Whether the corresponding cube is used at all
+    cube_used: Vec<Variable>,
+    /// Whether the corresponding cube is used for this function
+    cube_used_in_fn: Vec<Vec<Variable>>,
+    /// Number of cubes used in the function
+    num_cubes_in_fn: Vec<Expression>,
+    /// Number of or used in the function
+    num_xor_in_fn: Vec<Variable>,
+    /// All variables of the problem
+    vars: ProblemVariables,
+    /// All constraints of the problem
+    constraints: Vec<Constraint>,
+    /// Objective of the problem
+    objective: Expression,
+}
+
+impl<'a> EsopModeler<'a> {
+    /// Initial creation of the modeler
+    fn new(functions: &[Lut], and_cost: i32, xor_cost: i32) -> EsopModeler {
+        EsopModeler {
+            functions,
+            and_cost,
+            xor_cost,
+            cubes: Vec::new(),
+            cube_used: Vec::new(),
+            cube_used_in_fn: Vec::new(),
+            num_cubes_in_fn: Vec::new(),
+            num_xor_in_fn: Vec::new(),
+            vars: variables!(),
+            constraints: Vec::new(),
+            objective: Expression::default(),
+        }
+    }
+
+    /// Check the datastructure
+    fn check(&self) {
+        for f in self.functions {
+            assert_eq!(f.num_vars(), self.functions[0].num_vars());
+        }
+        assert!(self.and_cost >= 1);
+        assert!(self.xor_cost >= 1);
+    }
+
+    /// Build a 2D array of binary variables (N x functions.len())
+    fn build_function_variables(&mut self, n: usize) -> Vec<Vec<Variable>> {
+        let mut ret = Vec::new();
+        for _ in 0..n {
+            let mut fn_vars = Vec::new();
+            for _ in self.functions {
+                fn_vars.push(self.vars.add(variable().binary()));
+            }
+            ret.push(fn_vars);
+        }
+        ret
+    }
+
+    /// Setup main decision variables
+    fn setup_vars(&mut self) {
+        self.cubes = enumerate_valid_cubes_multi(self.functions);
+        self.cube_used = self
+            .cubes
+            .iter()
+            .map(|_| self.vars.add(variable().binary()))
+            .collect();
+        self.cube_used_in_fn = self.build_function_variables(self.cubes.len());
+
+        for j in 0..self.functions.len() {
+            let mut num_cubes = Expression::from(0);
+            for i in 0..self.cubes.len() {
+                num_cubes += self.cube_used_in_fn[i][j];
+            }
+            let num_xor = self.vars.add(variable().min(0));
+            self.num_xor_in_fn.push(num_xor);
+            self.constraints.push((num_xor - &num_cubes + 1).geq(0));
+            self.num_cubes_in_fn.push(num_cubes);
+        }
+    }
+
+    /// Cost of a cube
+    fn cube_cost(&self, i: usize) -> i32 {
+        let num = self.cubes[i].num_gates() as i32;
+        num * self.and_cost
+    }
+
+    /// Define the objective
+    fn setup_objective(&mut self) {
+        let mut expr = Expression::from(0);
+        // Cost of each used cube
+        for i in 0..self.cubes.len() {
+            expr += self.cube_cost(i) * self.cube_used[i];
+        }
+        // Cost of each Xor
+        for i in 0..self.functions.len() {
+            expr += self.xor_cost * self.num_xor_in_fn[i];
+        }
+        self.objective = expr;
+    }
+
+    /// Force cube_used if cube_used_in_fn is set
+    fn add_cover_constraints(&mut self) {
+        for j in 0..self.functions.len() {
+            for i in 0..self.cubes.len() {
+                self.constraints
+                    .push((self.cube_used_in_fn[i][j] - self.cube_used[i]).leq(0));
+            }
+        }
+    }
+
+    /// Value constraints for each functions based on the cubes used
+    fn add_xor_constraints(&mut self) {
+        for (j, lut) in self.functions.iter().enumerate() {
+            for b in 0..self.functions[j].num_bits() {
+                let mut expr = Expression::from(if lut.value(b) { 1 } else { 0 });
+                for (i, c) in self.cubes.iter().enumerate() {
+                    if c.value(b) {
+                        expr += self.cube_used_in_fn[i][j];
+                    }
+                }
+                // One way to specify a Xor constraint is to force integrality of sum/2
+                // TODO: there is a lot to optimize here
+                //     * reduce the number of variables in each constraint
+                //     * use a better encoding for the constraints
+                expr *= 0.5;
+                let v = self.vars.add(variable().integer());
+                expr += v;
+                self.constraints.push(expr.eq(0));
+            }
+        }
+    }
+
+    /// Solve the problem
+    fn solve(self) -> Vec<Esop> {
+        let mut pb = self
+            .vars
+            .minimise(self.objective.clone())
+            .using(default_solver);
+        for c in self.constraints {
+            pb.add_constraint(c);
+        }
+        let solution = pb.solve().unwrap();
+        let mut ret = Vec::new();
+        for j in 0..self.functions.len() {
+            let mut cubes = Vec::new();
+            for i in 0..self.cubes.len() {
+                let is_used = solution.value(self.cube_used_in_fn[i][j]) > 0.5;
+                if is_used {
+                    cubes.push(self.cubes[i]);
+                }
+            }
+            let esop = Esop::from_cubes(self.functions[j].num_vars(), cubes);
+            ret.push(esop);
+        }
+        ret
+    }
+
+    /// Run the whole optimization
+    pub fn run(functions: &[Lut], and_cost: i32, xor_cost: i32) -> Vec<Esop> {
+        let mut modeler = EsopModeler::new(functions, and_cost, xor_cost);
+        modeler.setup_vars();
+        modeler.check();
+        modeler.setup_objective();
+        modeler.add_cover_constraints();
+        modeler.add_xor_constraints();
+        let ret = modeler.solve();
+        for (esop, lut) in zip(&ret, functions) {
+            assert_eq!(&Lut::from(esop), lut);
+        }
+        ret
+    }
+}
+
 /// Optimize a Lut as a Sum of Products (Or of Ands) using Mixed-Integer Programming
 ///
 /// This is a typical 2-level optimization. The objective is to minimize the total cost of the
@@ -334,9 +517,20 @@ pub fn optimize_sopes_mip(
     SopModeler::run(functions, and_cost, xor_cost, or_cost)
 }
 
+/// Optimize a Lut as an Exclusive Sum of Products (Xor of Ands) using Mixed-Integer Programming
+///
+/// This is a less common form of 2-level optimization. The objective is to minimize the total cost of the
+/// gates. Possible cost reductions by sharing intermediate And gates are ignored.
+pub fn optimize_esop_mip(functions: &[Lut], and_cost: i32, xor_cost: i32) -> Vec<Esop> {
+    EsopModeler::run(functions, and_cost, xor_cost)
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::{sop::optim::optimize_sop_mip, sop::optim::optimize_sopes_mip, Lut};
+    use crate::{
+        sop::optim::optimize_esop_mip, sop::optim::optimize_sop_mip,
+        sop::optim::optimize_sopes_mip, Lut,
+    };
 
     #[test]
     #[cfg(feature = "rand")]
@@ -401,5 +595,21 @@ mod tests {
         assert_eq!(opt1[0].0.num_lits(), 0);
         assert_eq!(opt1[0].1.num_cubes(), 1);
         assert_eq!(opt1[0].1.num_lits(), 3);
+    }
+
+    #[test]
+    #[cfg(feature = "rand")]
+    fn test_random_esop_optim() {
+        for num_vars in 0..4 {
+            for num_luts in 1..5 {
+                for _ in 0..10 {
+                    let mut luts = Vec::new();
+                    for _ in 0..num_luts {
+                        luts.push(Lut::random(num_vars));
+                    }
+                    optimize_esop_mip(&luts, 1, 2);
+                }
+            }
+        }
     }
 }
