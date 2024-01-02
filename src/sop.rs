@@ -1,6 +1,6 @@
 //! Sum-of-Products representations
 //!
-//! This module provides two-level representations such as [Sumof-Products](crate::sop::Sop)
+//! This module provides two-level representations such as [Sum-of-Products](crate::sop::Sop)
 //! and [Sum-of-Exclusive Sums](crate::sop::Soes).
 
 mod cube;
