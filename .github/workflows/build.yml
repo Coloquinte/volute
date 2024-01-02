@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        features: ["", "--no-default-features", "--features optim-mip"]
+        features: ["", "--no-default-features", "--features optim-mip", "--features optim-sat"]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
