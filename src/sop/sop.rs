@@ -327,6 +327,19 @@ mod tests {
 
     #[test]
     #[cfg(feature = "rand")]
+    fn test_random() {
+        use crate::Lut;
+
+        for i in 0..8 {
+            for _ in 0..10 {
+                let l = Lut::random(i);
+                assert_eq!(l, Sop::from(&l).into());
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "rand")]
     fn test_not() {
         use crate::Lut;
 

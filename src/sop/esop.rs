@@ -183,6 +183,36 @@ impl fmt::Display for Esop {
     }
 }
 
+impl From<&Lut> for Esop {
+    /// Obtain the canonical Esop representation, with only positive cubes
+    fn from(value: &Lut) -> Self {
+        // Whether the corresponding positive cube is present in the Esop
+        let mut esop_lut = value.clone();
+        let mut ret = Esop::zero(value.num_vars());
+        for i in 0..value.num_bits() {
+            if !esop_lut.get_bit(i) {
+                continue;
+            }
+            ret.cubes.push(Cube::from_mask(i as u32, 0));
+            // Update the value for the other cubes once this one is handled
+            for j in (i + 1)..value.num_bits() {
+                if !j & i == 0 {
+                    esop_lut.set_value(j, !esop_lut.value(j));
+                }
+            }
+            // TODO: the above could use bitwise operations
+            // TODO: this is a linear boolean operation that can certainly be optimized further
+        }
+        ret
+    }
+}
+
+impl From<Lut> for Esop {
+    fn from(value: Lut) -> Self {
+        Esop::from(&value)
+    }
+}
+
 impl From<&Esop> for Lut {
     fn from(value: &Esop) -> Self {
         let mut ret = Lut::zero(value.num_vars());
@@ -218,6 +248,24 @@ mod tests {
             assert!(!Esop::nth_var(32, i).is_one());
             assert!(!Esop::nth_var_inv(32, i).is_zero());
             assert!(!Esop::nth_var_inv(32, i).is_one());
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "rand")]
+    fn test_random() {
+        use crate::Lut;
+
+        for i in 0..8 {
+            let l = Lut::zero(i);
+            assert_eq!(l, Esop::from(&l).into());
+            let l = Lut::one(i);
+            assert_eq!(l, Esop::from(&l).into());
+
+            for _ in 0..10 {
+                let l = Lut::random(i);
+                assert_eq!(l, Esop::from(&l).into());
+            }
         }
     }
 

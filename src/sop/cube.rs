@@ -95,6 +95,16 @@ impl Cube {
         }
     }
 
+    /// Build a cube directly from the integer masks
+    pub fn from_mask(pos: u32, neg: u32) -> Cube {
+        let c = Cube { pos, neg };
+        if c.is_zero() {
+            Cube::zero()
+        } else {
+            c
+        }
+    }
+
     /// Return the number of literals
     pub fn num_lits(&self) -> usize {
         if self.is_zero() {
