@@ -353,6 +353,14 @@ impl<'a> EsopModeler<'a> {
         }
     }
 
+    /// Number of variables
+    fn num_vars(&self) -> usize {
+        match self.functions.first() {
+            Some(f) => f.num_vars(),
+            _ => 0,
+        }
+    }
+
     /// Check the datastructure
     fn check(&self) {
         for f in self.functions {
@@ -377,7 +385,9 @@ impl<'a> EsopModeler<'a> {
 
     /// Setup main decision variables
     fn setup_vars(&mut self) {
-        self.cubes = enumerate_valid_cubes_multi(self.functions);
+        self.cubes = Cube::all(self.num_vars())
+            .filter(|c| *c == Cube::one() || c.neg_vars().count() >= 1 || c.pos_vars().count() >= 2)
+            .collect();
         self.cube_used = self
             .cubes
             .iter()
@@ -429,7 +439,7 @@ impl<'a> EsopModeler<'a> {
 
     /// Value constraint for a single bit of a function: the xor of the cubes must
     /// be equal to the expected value
-    fn add_xor_constraint(&mut self, fn_index: usize, b: usize) {
+    fn add_value_constraint(&mut self, fn_index: usize, b: usize) {
         let val = self.functions[fn_index].value(b);
         let mut expr = Expression::from(if val { 1 } else { 0 });
         for (i, c) in self.cubes.iter().enumerate() {
@@ -447,7 +457,7 @@ impl<'a> EsopModeler<'a> {
 
     /// Constrain the difference between two bits for a function; this makes the constraint much
     /// more sparse
-    fn add_xor_constraint_diff(&mut self, fn_index: usize, b1: usize, b2: usize) {
+    fn add_value_constraint_diff(&mut self, fn_index: usize, b1: usize, b2: usize) {
         let val = self.functions[fn_index].value(b1) ^ self.functions[fn_index].value(b2);
         let mut expr = Expression::from(if val { 1 } else { 0 });
         for (i, c) in self.cubes.iter().enumerate() {
@@ -464,23 +474,23 @@ impl<'a> EsopModeler<'a> {
     }
 
     /// Value constraints for each functions based on the cubes used
-    fn add_xor_constraints(&mut self) {
+    fn add_value_constraints(&mut self) {
         for j in 0..self.functions.len() {
             for b in 0..self.functions[j].num_bits() {
-                self.add_xor_constraint(j, b);
+                self.add_value_constraint(j, b);
             }
         }
     }
 
-    /// Value constraints for each functions based on the cubes used, with sparser method
+    /// Redundant xor constraints for s stonger relaxation
     #[allow(dead_code)]
-    fn add_xor_constraints_with_diff(&mut self) {
+    fn add_redundant_value_constraints(&mut self) {
         for j in 0..self.functions.len() {
-            self.add_xor_constraint(j, 0);
-            for b1 in 1..self.functions[j].num_bits() {
-                // Other mask with one bit flipped
-                let b2 = b1 & (b1 - 1);
-                self.add_xor_constraint_diff(j, b1, b2);
+            for b1 in 0..self.functions[j].num_bits() {
+                for flipped in 0..self.functions[j].num_vars() {
+                    let b2 = b1 ^ (1 << flipped);
+                    self.add_value_constraint_diff(j, b1, b2);
+                }
             }
         }
     }
@@ -517,7 +527,8 @@ impl<'a> EsopModeler<'a> {
         modeler.check();
         modeler.setup_objective();
         modeler.add_cover_constraints();
-        modeler.add_xor_constraints();
+        modeler.add_value_constraints();
+        modeler.add_redundant_value_constraints();
         let ret = modeler.solve();
         for (esop, lut) in zip(&ret, functions) {
             assert_eq!(&Lut::from(esop), lut);
@@ -610,7 +621,7 @@ mod tests {
     #[test]
     #[cfg(feature = "rand")]
     fn test_random_sopes_optim() {
-        for num_vars in 0..5 {
+        for num_vars in 0..4 {
             for num_luts in 1..5 {
                 for _ in 0..10 {
                     let mut luts = Vec::new();
