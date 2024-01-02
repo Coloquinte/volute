@@ -12,11 +12,11 @@ use good_lp::Solution;
 use good_lp::SolverModel;
 use good_lp::Variable;
 
-use crate::Cube;
-use crate::Ecube;
+use crate::sop::Cube;
+use crate::sop::Ecube;
+use crate::sop::Soes;
+use crate::sop::Sop;
 use crate::Lut;
-use crate::Soes;
-use crate::Sop;
 
 /// Enumerate cubes that can be used to implement the given function. That is, cubes that are imply the function
 fn enumerate_valid_cubes(function: &Lut) -> Vec<Cube> {
@@ -336,7 +336,7 @@ pub fn optimize_sopes_mip(
 
 #[cfg(test)]
 mod tests {
-    use crate::{optim::optimize_sop_mip, optim::optimize_sopes_mip, Lut};
+    use crate::{sop::optim::optimize_sop_mip, sop::optim::optimize_sopes_mip, Lut};
 
     #[test]
     #[cfg(feature = "rand")]

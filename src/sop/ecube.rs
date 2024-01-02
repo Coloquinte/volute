@@ -8,7 +8,7 @@ use std::{
 
 use crate::Lut;
 
-/// Representation of the Xor of variables, similar to [`Cube`](crate::cube::Cube) for Xor
+/// Representation of the Xor of variables, similar to [`Cube`](crate::sop::Cube) for Xor
 ///
 /// Each variable is represented by a bit, and the overall parity (Xor or Xnor) is represented
 /// on the side.

@@ -1,6 +1,7 @@
 use std::{fmt, ops::BitOr};
 
-use crate::{ecube::Ecube, Lut};
+use crate::sop::Ecube;
+use crate::Lut;
 
 /// Sum of Exclusive Sums representation (Or of Xor)
 ///

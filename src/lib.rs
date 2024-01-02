@@ -8,7 +8,7 @@
 //! fixed-size truth tables ([`Lut2` to `Lut12`](https://docs.rs/volute/latest/volute/struct.StaticLut.html)).
 //! They provide logical operators and utility functions for analysis, canonization and decomposition.
 //! Some support is available for other standard representation, such as Sum-of-Products
-//! ([`Sop`](https://docs.rs/volute/latest/volute/struct.Sop.html)).
+//! ([`Sop`](https://docs.rs/volute/latest/volute/sop/struct.Sop.html)).
 //!
 //! API and documentation try to follow the same terminology as the C++ library [Kitty](https://libkitty.readthedocs.io/en/latest).
 //!
@@ -52,25 +52,14 @@
 
 mod bdd;
 mod canonization;
-mod cube;
 mod decomposition;
-mod ecube;
 mod lut;
 mod operations;
-mod soes;
-mod sop;
+pub mod sop;
 mod static_lut;
 
-#[cfg(feature = "optim-mip")]
-#[cfg_attr(docsrs, doc(cfg(feature = "optim-mip")))]
-pub mod optim;
-
-pub use cube::Cube;
 pub use decomposition::DecompositionType;
-pub use ecube::Ecube;
 pub use lut::Lut;
-pub use soes::Soes;
-pub use sop::Sop;
 pub use static_lut::StaticLut;
 
 pub use static_lut::{
