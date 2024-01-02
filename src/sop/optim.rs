@@ -265,7 +265,7 @@ impl<'a> SopModeler<'a> {
         for c in self.constraints {
             pb.add_constraint(c);
         }
-        let solution = pb.solve().unwrap();
+        let solution = pb.set_threads(1).solve().unwrap();
         let mut ret = Vec::new();
         for j in 0..self.functions.len() {
             let mut cubes = Vec::new();
@@ -494,7 +494,7 @@ impl<'a> EsopModeler<'a> {
         for c in self.constraints {
             pb.add_constraint(c);
         }
-        let solution = pb.solve().unwrap();
+        let solution = pb.set_threads(1).solve().unwrap();
         let mut ret = Vec::new();
         for j in 0..self.functions.len() {
             let mut cubes = Vec::new();
