@@ -39,6 +39,7 @@ jobs:
 
       - name: Test
         uses: actions-rs/cargo@v1
+        timeout-minutes: 10
         if: ${{ matrix.features != '--features optim-mip' || matrix.os != 'macos-latest' }}
         with:
           command: test
