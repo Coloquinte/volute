@@ -171,28 +171,16 @@ impl<'a> SopModeler<'a> {
         }
     }
 
-    /// Cost of a cube
-    fn cube_cost(&self, i: usize) -> i32 {
-        let num = self.cubes[i].num_gates() as i32;
-        num * self.and_cost
-    }
-
-    /// Cost of an exclusive cube
-    fn ecube_cost(&self, i: usize) -> i32 {
-        let num = self.ecubes[i].num_gates() as i32;
-        num * self.xor_cost
-    }
-
     /// Define the objective
     fn setup_objective(&mut self) {
         let mut expr = Expression::from(0);
         // Cost of each used cube
         for i in 0..self.cubes.len() {
-            expr += self.cube_cost(i) * self.cube_used[i];
+            expr += (self.cubes[i].num_gates() as i32 * self.and_cost) * self.cube_used[i];
         }
         // Cost of each exclusive cube
         for i in 0..self.ecubes.len() {
-            expr += self.ecube_cost(i) * self.ecube_used[i];
+            expr += (self.ecubes[i].num_gates() as i32 * self.xor_cost) * self.ecube_used[i];
         }
         // Cost of each Or
         for i in 0..self.functions.len() {
