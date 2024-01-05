@@ -4,6 +4,10 @@
 #[cfg_attr(docsrs, doc(cfg(feature = "optim-mip")))]
 mod mip;
 
+#[cfg(feature = "optim-sat")]
+#[cfg_attr(docsrs, doc(cfg(feature = "optim-sat")))]
+mod sat;
+
 use crate::sop::Cube;
 use crate::sop::Ecube;
 use crate::Lut;
@@ -52,3 +56,7 @@ fn enumerate_valid_ecubes_multi(functions: &[Lut]) -> Vec<Ecube> {
 #[cfg(feature = "optim-mip")]
 #[cfg_attr(docsrs, doc(cfg(feature = "optim-mip")))]
 pub use mip::*;
+
+#[cfg(feature = "optim-sat")]
+#[cfg_attr(docsrs, doc(cfg(feature = "optim-sat")))]
+pub use sat::*;

@@ -9,7 +9,7 @@ mod esop;
 mod soes;
 mod sop;
 
-#[cfg(feature = "optim-mip")]
+#[cfg(any(feature = "optim-mip", feature = "optim-sat"))]
 #[cfg_attr(docsrs, doc(cfg(feature = "optim-mip")))]
 pub mod optim;
 
