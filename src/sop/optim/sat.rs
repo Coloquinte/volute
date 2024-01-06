@@ -1,14 +1,17 @@
 //! Optimization of boolean function representation using mathematical programming
 
+use std::cmp::max;
 use std::iter::zip;
 
 use rustsat::instances::ManageVars;
-use rustsat::instances::Objective;
 use rustsat::instances::SatInstance;
 use rustsat::solvers::Solve;
 use rustsat::solvers::SolverResult;
+use rustsat::types::constraints::PBConstraint;
+use rustsat::types::Assignment;
 use rustsat::types::Clause;
 use rustsat::types::Lit;
+use rustsat::types::Var;
 
 use crate::sop::Cube;
 use crate::sop::Ecube;
@@ -22,11 +25,11 @@ struct SopModeler<'a> {
     /// Functions of the problem
     functions: &'a [Lut],
     /// Cost of And gates
-    and_cost: i32,
+    and_cost: isize,
     /// Cost of Xor gates
-    xor_cost: i32,
+    xor_cost: isize,
     /// Cost of Or gates
-    or_cost: i32,
+    or_cost: isize,
     /// All cubes considered for the problem
     cubes: Vec<Cube>,
     /// All exclusive cubes considered for the problem
@@ -42,12 +45,12 @@ struct SopModeler<'a> {
     /// All variables of the problem
     instance: SatInstance,
     /// Objective of the problem
-    objective: Objective,
+    objective: Vec<(Lit, isize)>,
 }
 
 impl<'a> SopModeler<'a> {
     /// Initial creation of the modeler
-    fn new(functions: &[Lut], and_cost: i32, xor_cost: i32, or_cost: i32) -> SopModeler {
+    fn new(functions: &[Lut], and_cost: isize, xor_cost: isize, or_cost: isize) -> SopModeler {
         SopModeler {
             functions,
             and_cost,
@@ -60,7 +63,7 @@ impl<'a> SopModeler<'a> {
             cube_used_in_fn: Vec::new(),
             ecube_used_in_fn: Vec::new(),
             instance: SatInstance::new(),
-            objective: Objective::new(),
+            objective: Vec::new(),
         }
     }
 
@@ -77,7 +80,7 @@ impl<'a> SopModeler<'a> {
     /// Build a 1D array of binary variables
     fn build_variables(&mut self, n: usize) -> Vec<Lit> {
         let mut ret = Vec::new();
-        for i in 0..n {
+        for _ in 0..n {
             ret.push(self.instance.var_manager().new_var().pos_lit());
         }
         ret
@@ -107,9 +110,26 @@ impl<'a> SopModeler<'a> {
         self.ecube_used_in_fn = self.build_function_variables(self.ecubes.len());
     }
 
+    /// Cost of a cube, including the Or gate it may create
+    fn cube_cost(&self, i: usize) -> isize {
+        self.and_cost * self.cubes[i].num_gates() as isize + self.or_cost
+    }
+
+    /// Cost of an exclusive cube, including the Or gate it may create
+    fn ecube_cost(&self, i: usize) -> isize {
+        self.xor_cost * self.ecubes[i].num_gates() as isize + self.or_cost
+    }
+
     /// Define the objective
     fn setup_objective(&mut self) {
-        todo!();
+        let mut obj = Vec::new();
+        for i in 0..self.cubes.len() {
+            obj.push((self.cube_used[i], self.cube_cost(i)));
+        }
+        for i in 0..self.ecubes.len() {
+            obj.push((self.ecube_used[i], self.ecube_cost(i)));
+        }
+        self.objective = obj;
     }
 
     /// Force cube_used if cube_used_in_fn is set
@@ -165,14 +185,80 @@ impl<'a> SopModeler<'a> {
         }
     }
 
-    /// Solve the problem
-    fn solve(&mut self) -> Vec<(Sop, Soes)> {
+    /// Maximum variable for solution
+    fn max_var(&self) -> Var {
+        let mut ret = Var::new(0);
+        for v in &self.cube_used {
+            ret = max(v.var(), ret);
+        }
+        for v in &self.ecube_used {
+            ret = max(v.var(), ret);
+        }
+        for vv in &self.cube_used_in_fn {
+            for v in vv {
+                ret = max(v.var(), ret);
+            }
+        }
+        for vv in &self.ecube_used_in_fn {
+            for v in vv {
+                ret = max(v.var(), ret);
+            }
+        }
+        ret
+    }
+
+    /// Solve the problem with a given limit on the objective
+    fn solve_constrained(&self, max_obj: Option<isize>) -> Option<Assignment> {
+        let mut inst = self.instance.clone();
+        if let Some(max_obj) = max_obj {
+            inst.add_pb_constr(PBConstraint::new_ub(
+                self.objective.clone().into_iter(),
+                max_obj,
+            ));
+        }
         let mut solver = rustsat_kissat::Kissat::default();
-        solver.add_cnf(self.instance.clone().as_cnf().0).unwrap();
-        assert_eq!(solver.solve().unwrap(), SolverResult::Sat);
-        let solution = solver
-            .solution(self.instance.var_manager().max_var().unwrap())
-            .unwrap();
+        solver.add_cnf(inst.clone().as_cnf().0).unwrap();
+        if solver.solve().unwrap() == SolverResult::Sat {
+            let sol = solver.solution(self.max_var()).unwrap();
+            Some(sol)
+        } else {
+            None
+        }
+    }
+
+    fn compute_obj(&self, solution: &Assignment) -> isize {
+        let mut ret = 0;
+        for (l, cost) in &self.objective {
+            if solution.lit_value(*l).to_bool_with_def(false) {
+                ret += cost;
+            }
+        }
+        ret
+    }
+
+    /// Solve the problem with a given limit on the objective
+    fn solve_optim(&self) -> Assignment {
+        let mut best_sol = self.solve_constrained(None).unwrap();
+        let mut best_obj = self.compute_obj(&best_sol);
+        let mut min_obj = 0;
+        while min_obj < best_obj {
+            let mid = (min_obj + best_obj) / 2;
+            match self.solve_constrained(Some(mid)) {
+                Some(sol) => {
+                    let obj = self.compute_obj(&sol);
+                    assert!(obj <= mid);
+                    best_sol = sol;
+                    best_obj = obj
+                }
+                None => min_obj = mid + 1,
+            }
+        }
+        best_sol
+    }
+
+    /// Solve the problem
+    fn solve(&self) -> Vec<(Sop, Soes)> {
+        let solution = self.solve_optim();
         let mut ret = Vec::new();
         for j in 0..self.functions.len() {
             let mut cubes = Vec::new();
@@ -204,11 +290,16 @@ impl<'a> SopModeler<'a> {
     }
 
     /// Run the whole optimization
-    pub fn run(functions: &[Lut], and_cost: i32, xor_cost: i32, or_cost: i32) -> Vec<(Sop, Soes)> {
+    pub fn run(
+        functions: &[Lut],
+        and_cost: isize,
+        xor_cost: isize,
+        or_cost: isize,
+    ) -> Vec<(Sop, Soes)> {
         let mut modeler = SopModeler::new(functions, and_cost, xor_cost, or_cost);
         modeler.setup_vars();
         modeler.check();
-        //modeler.setup_objective();
+        modeler.setup_objective();
         modeler.add_cover_constraints();
         modeler.add_off_set_constraints();
         modeler.add_on_set_constraints();
@@ -226,7 +317,7 @@ impl<'a> SopModeler<'a> {
 /// This is a typical 2-level optimization. The objective is to minimize the total cost of the
 /// gates. Possible cost reductions by sharing intermediate And gates are ignored.
 pub fn optimize_sop_sat(functions: &[Lut], and_cost: i32, or_cost: i32) -> Vec<Sop> {
-    let opt = SopModeler::run(functions, and_cost, -1, or_cost);
+    let opt = SopModeler::run(functions, and_cost as isize, -1, or_cost as isize);
     opt.into_iter()
         .map(|(sop, soes)| {
             assert_eq!(soes.num_cubes(), 0);
@@ -245,7 +336,12 @@ pub fn optimize_sopes_sat(
     xor_cost: i32,
     or_cost: i32,
 ) -> Vec<(Sop, Soes)> {
-    SopModeler::run(functions, and_cost, xor_cost, or_cost)
+    SopModeler::run(
+        functions,
+        and_cost as isize,
+        xor_cost as isize,
+        or_cost as isize,
+    )
 }
 
 /// Optimize a Lut as an Exclusive Sum of Products (Xor of Ands) using a Satisfiability solver
