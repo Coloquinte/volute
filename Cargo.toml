@@ -1,6 +1,6 @@
 [package]
 name = "volute"
-version = "1.1.1"
+version = "1.1.2"
 edition = "2021"
 
 authors = ["Gabriel Gouvine <gabriel.gouvine_cargo@m4x.org>"]
@@ -38,7 +38,8 @@ name = "canonization"
 harness = false
 
 [package.metadata.docs.rs]
-# Document all features
-all-features = true
+# Document MIP optimization
+# Rustsat doc is broken, so optim-sat is not documented
+features = ["optim-mip"]
 # Used to enable doc_cfg in nightly
 rustdoc-args = ["--cfg", "docsrs"]
