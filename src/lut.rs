@@ -364,6 +364,27 @@ impl Lut {
         }
         table_complexity(num_vars, table.as_slice())
     }
+
+    /// Return the hexadecimal string representing the function
+    ///
+    /// Contrary to display, nothing else in printed: `a45b` instead of `Lut4(a45b)`
+    pub fn to_hex_string(&self) -> String {
+        to_hex(self.num_vars(), self.table.as_ref())
+    }
+
+    /// Return the binary string representing the function
+    ///
+    /// Contrary to display, nothing else in printed: `0101` instead of `Lut2(0101)`
+    pub fn to_bin_string(&self) -> String {
+        to_bin(self.num_vars(), self.table.as_ref())
+    }
+
+    /// Build a Lut from an hexadecimal string
+    pub fn from_hex_string(num_vars: usize, s: &str) -> Result<Self, ()> {
+        let mut ret = Lut::zero(num_vars);
+        fill_hex(ret.num_vars(), ret.table.as_mut(), s)?;
+        Ok(ret)
+    }
 }
 
 #[doc(hidden)]
@@ -1096,6 +1117,20 @@ mod tests {
                         );
                     }
                 }
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "rand")]
+    fn test_string_conversion() {
+        for num_vars in 0..8 {
+            for _ in 0..10 {
+                let lut = Lut::random(num_vars);
+                assert_eq!(
+                    lut,
+                    Lut::from_hex_string(num_vars, &lut.to_hex_string()).unwrap()
+                );
             }
         }
     }

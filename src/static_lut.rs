@@ -340,6 +340,27 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
         }
         table_complexity(N, table.as_slice())
     }
+
+    /// Return the hexadecimal string representing the function
+    ///
+    /// Contrary to display, nothing else in printed: `a45b` instead of `Lut4(a45b)`
+    pub fn to_hex_string(&self) -> String {
+        to_hex(self.num_vars(), self.table.as_ref())
+    }
+
+    /// Return the binary string representing the function
+    ///
+    /// Contrary to display, nothing else in printed: `0101` instead of `Lut2(0101)`
+    pub fn to_bin_string(&self) -> String {
+        to_bin(self.num_vars(), self.table.as_ref())
+    }
+
+    /// Build a Lut from an hexadecimal string
+    pub fn from_hex_string(s: &str) -> Result<Self, ()> {
+        let mut ret = Self::zero();
+        fill_hex(ret.num_vars(), ret.table.as_mut(), s)?;
+        Ok(ret)
+    }
 }
 
 #[doc(hidden)]
@@ -765,6 +786,33 @@ mod tests {
         for _ in 0..10 {
             let lut = Lut6::random();
             assert_eq!(lut, Lut6::from(u64::from(lut)));
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "rand")]
+    fn test_string_conversion() {
+        use crate::Lut8;
+
+        for _ in 0..10 {
+            let lut = Lut0::random();
+            assert_eq!(lut, Lut0::from_hex_string(&lut.to_hex_string()).unwrap());
+        }
+        for _ in 0..10 {
+            let lut = Lut1::random();
+            assert_eq!(lut, Lut1::from_hex_string(&lut.to_hex_string()).unwrap());
+        }
+        for _ in 0..10 {
+            let lut = Lut2::random();
+            assert_eq!(lut, Lut2::from_hex_string(&lut.to_hex_string()).unwrap());
+        }
+        for _ in 0..10 {
+            let lut = Lut3::random();
+            assert_eq!(lut, Lut3::from_hex_string(&lut.to_hex_string()).unwrap());
+        }
+        for _ in 0..10 {
+            let lut = Lut8::random();
+            assert_eq!(lut, Lut8::from_hex_string(&lut.to_hex_string()).unwrap());
         }
     }
 }

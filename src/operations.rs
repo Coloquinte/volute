@@ -230,25 +230,45 @@ pub fn cmp(table1: &[u64], table2: &[u64]) -> std::cmp::Ordering {
     return table1.iter().rev().cmp(table2.iter().rev());
 }
 
+/// Expected size of the string for one chunk
+fn hex_str_size(num_vars: usize) -> usize {
+    let i = num_vars;
+    if i >= 6 {
+        16
+    } else if i <= 2 {
+        1
+    } else {
+        1 << (i - 2)
+    }
+}
+
+/// Hexadecimal string representation of the function
+pub fn to_hex(num_vars: usize, table: &[u64]) -> String {
+    let width = hex_str_size(num_vars);
+    let mut s = String::new();
+    for t in table.iter().rev() {
+        s.push_str(&format!("{:0width$x}", t));
+    }
+    s
+}
+
 /// Hexadecimal formatting
 pub fn fmt_hex(
     num_vars: usize,
     table: &[u64],
     f: &mut core::fmt::Formatter<'_>,
 ) -> core::fmt::Result {
-    let i = num_vars;
-    write!(f, "Lut{:}(", i)?;
-    let width = if i >= 6 {
-        16
-    } else if i <= 2 {
-        1
-    } else {
-        1 << (i - 2)
-    };
+    write!(f, "Lut{:}({})", num_vars, to_hex(num_vars, table))
+}
+
+/// Binary string representation of the function
+pub fn to_bin(num_vars: usize, table: &[u64]) -> String {
+    let width = if num_vars >= 6 { 64 } else { 1 << num_vars };
+    let mut s = String::new();
     for t in table.iter().rev() {
-        write!(f, "{:0width$x}", t)?;
+        s.push_str(&format!("{:0width$b}", t));
     }
-    write!(f, ")")
+    s
 }
 
 /// Binary formatting
@@ -257,13 +277,33 @@ pub fn fmt_bin(
     table: &[u64],
     f: &mut core::fmt::Formatter<'_>,
 ) -> core::fmt::Result {
-    let i = num_vars;
-    write!(f, "Lut{:}(", i)?;
-    let width = if i >= 6 { 64 } else { 1 << i };
-    for t in table.iter().rev() {
-        write!(f, "{:0width$b}", t)?;
+    write!(f, "Lut{:}({})", num_vars, to_bin(num_vars, table))
+}
+
+/// Fill from the hexadecimal representation
+pub fn fill_hex(num_vars: usize, table: &mut [u64], s: &str) -> Result<(), ()> {
+    debug_assert_eq!(table.len(), table_size(num_vars));
+    if !s.is_ascii() {
+        return Err(());
     }
-    write!(f, ")")
+    let width = hex_str_size(num_vars);
+    if s.len() != width * table.len() {
+        return Err(());
+    }
+
+    for (i, t) in table.iter_mut().rev().enumerate() {
+        let ss = &s[i * width..(i + 1) * width];
+        let v = u64::from_str_radix(ss, 16);
+        match v {
+            Ok(v) => {
+                *t = v;
+            }
+            Err(_) => {
+                return Err(());
+            }
+        }
+    }
+    Ok(())
 }
 
 /// Swap two variables in the LUT
