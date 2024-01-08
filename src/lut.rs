@@ -13,7 +13,7 @@ use crate::canonization::*;
 use crate::decomposition::*;
 use crate::operations::*;
 
-/// Arbitrary-size truth table
+/// Arbitrary-size truth table, representing a N-input boolean function with 2^N bits, one for each input combination
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
 pub struct Lut {
     num_vars: usize,

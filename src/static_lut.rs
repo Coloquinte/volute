@@ -14,7 +14,7 @@ use crate::decomposition::*;
 use crate::operations::*;
 use crate::Lut;
 
-/// Fixed-size truth table
+/// Fixed-size truth table representing a N-input boolean function with 2^N bits; more compact than [`Lut`](crate::Lut) when the size is known
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 pub struct StaticLut<const N: usize, const T: usize> {
     table: [u64; T],
