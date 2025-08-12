@@ -392,7 +392,7 @@ impl<const N: usize, const T: usize> Iterator for StaticLutIterator<N, T> {
 
 impl<const N: usize, const T: usize> Ord for StaticLut<N, T> {
     fn cmp(&self, other: &Self) -> Ordering {
-        return cmp(self.table.as_ref(), other.table.as_ref());
+        cmp(self.table.as_ref(), other.table.as_ref())
     }
 }
 

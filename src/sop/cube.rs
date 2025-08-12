@@ -116,7 +116,7 @@ impl Cube {
 
     /// Return the number of And2 gates necessary to implement the cube
     pub fn num_gates(&self) -> usize {
-        return max(self.num_lits(), 1) - 1;
+        max(self.num_lits(), 1) - 1
     }
 
     /// Returns the variables that are positive in the cube
@@ -146,7 +146,7 @@ impl Cube {
                 return false;
             }
         }
-        return true;
+        true
     }
 
     /// Perform the and operation on two cubes

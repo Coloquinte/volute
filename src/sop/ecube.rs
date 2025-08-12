@@ -87,7 +87,7 @@ impl Ecube {
 
     /// Return the number of Xor2 gates necessary to implement the cube
     pub fn num_gates(&self) -> usize {
-        return max(self.num_lits(), 1) - 1;
+        max(self.num_lits(), 1) - 1
     }
 
     /// Returns the variables in the cube
@@ -102,7 +102,7 @@ impl Ecube {
                 return false;
             }
         }
-        return true;
+        true
     }
 
     /// Return all possible cubes with a given number of variables

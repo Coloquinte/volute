@@ -426,7 +426,7 @@ impl Ord for Lut {
             return self.num_vars.cmp(&other.num_vars);
         }
         // Reverse iterator comparison, as Luts are compared by most-significant digits first
-        return cmp(self.table.as_ref(), other.table.as_ref());
+        cmp(self.table.as_ref(), other.table.as_ref())
     }
 }
 

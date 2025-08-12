@@ -163,7 +163,7 @@ pub fn fill_threshold(num_vars: usize, table: &mut [u64], k: usize) {
 
 /// Fill with a majority function
 pub fn fill_majority(num_vars: usize, table: &mut [u64]) {
-    fill_threshold(num_vars, table, (num_vars + 1) / 2);
+    fill_threshold(num_vars, table, num_vars.div_ceil(2));
 }
 
 /// Fill with random data
@@ -227,7 +227,7 @@ pub fn xor_inplace(table1: &mut [u64], table2: &[u64]) {
 /// Ordering
 pub fn cmp(table1: &[u64], table2: &[u64]) -> std::cmp::Ordering {
     debug_assert_eq!(table1.len(), table2.len());
-    return table1.iter().rev().cmp(table2.iter().rev());
+    table1.iter().rev().cmp(table2.iter().rev())
 }
 
 /// Expected size of the string for one chunk

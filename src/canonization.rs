@@ -80,7 +80,7 @@ pub fn generate_gray_flips(nb_bits: usize, rollback: bool) -> Vec<u8> {
 }
 
 /// Find the position where a swap occurs in a permutation
-fn find_permutation_swap(p1: &Vec<u8>, p2: &Vec<u8>) -> u8 {
+fn find_permutation_swap(p1: &[u8], p2: &[u8]) -> u8 {
     assert_eq!(p1.len(), p2.len());
     for i in 0..p1.len() - 1 {
         if p1[i] != p2[i] {
@@ -92,7 +92,7 @@ fn find_permutation_swap(p1: &Vec<u8>, p2: &Vec<u8>) -> u8 {
 }
 
 /// Find the position where a swap occurs in a permutation
-fn check_permutation_swap(p1: &Vec<u8>, p2: &Vec<u8>, ind: usize) {
+fn check_permutation_swap(p1: &[u8], p2: &[u8], ind: usize) {
     assert_eq!(p1.len(), p2.len());
     for i in 0..p1.len() - 1 {
         if i != ind && i != ind + 1 {
