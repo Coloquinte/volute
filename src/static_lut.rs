@@ -361,6 +361,13 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
         fill_hex(ret.num_vars(), ret.table.as_mut(), s)?;
         Ok(ret)
     }
+
+    /// Build a Lut from a binary string
+    pub fn from_bin_string(s: &str) -> Result<Self, ()> {
+        let mut ret = Self::zero();
+        fill_bin(ret.num_vars(), ret.table.as_mut(), s)?;
+        Ok(ret)
+    }
 }
 
 #[doc(hidden)]
@@ -797,22 +804,27 @@ mod tests {
         for _ in 0..10 {
             let lut = Lut0::random();
             assert_eq!(lut, Lut0::from_hex_string(&lut.to_hex_string()).unwrap());
+            assert_eq!(lut, Lut0::from_bin_string(&lut.to_bin_string()).unwrap());
         }
         for _ in 0..10 {
             let lut = Lut1::random();
             assert_eq!(lut, Lut1::from_hex_string(&lut.to_hex_string()).unwrap());
+            assert_eq!(lut, Lut1::from_bin_string(&lut.to_bin_string()).unwrap());
         }
         for _ in 0..10 {
             let lut = Lut2::random();
             assert_eq!(lut, Lut2::from_hex_string(&lut.to_hex_string()).unwrap());
+            assert_eq!(lut, Lut2::from_bin_string(&lut.to_bin_string()).unwrap());
         }
         for _ in 0..10 {
             let lut = Lut3::random();
             assert_eq!(lut, Lut3::from_hex_string(&lut.to_hex_string()).unwrap());
+            assert_eq!(lut, Lut3::from_bin_string(&lut.to_bin_string()).unwrap());
         }
         for _ in 0..10 {
             let lut = Lut8::random();
             assert_eq!(lut, Lut8::from_hex_string(&lut.to_hex_string()).unwrap());
+            assert_eq!(lut, Lut8::from_bin_string(&lut.to_bin_string()).unwrap());
         }
     }
 }

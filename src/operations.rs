@@ -242,6 +242,16 @@ fn hex_str_size(num_vars: usize) -> usize {
     }
 }
 
+/// Expected size of the string for one chunk
+fn bin_str_size(num_vars: usize) -> usize {
+    let i = num_vars;
+    if i >= 6 {
+        64
+    } else {
+        1 << i
+    }
+}
+
 /// Hexadecimal string representation of the function
 pub fn to_hex(num_vars: usize, table: &[u64]) -> String {
     let width = hex_str_size(num_vars);
@@ -294,6 +304,32 @@ pub fn fill_hex(num_vars: usize, table: &mut [u64], s: &str) -> Result<(), ()> {
     for (i, t) in table.iter_mut().rev().enumerate() {
         let ss = &s[i * width..(i + 1) * width];
         let v = u64::from_str_radix(ss, 16);
+        match v {
+            Ok(v) => {
+                *t = v;
+            }
+            Err(_) => {
+                return Err(());
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Fill from the binary representation
+pub fn fill_bin(num_vars: usize, table: &mut [u64], s: &str) -> Result<(), ()> {
+    debug_assert_eq!(table.len(), table_size(num_vars));
+    if !s.is_ascii() {
+        return Err(());
+    }
+    let width = bin_str_size(num_vars);
+    if s.len() != width * table.len() {
+        return Err(());
+    }
+
+    for (i, t) in table.iter_mut().rev().enumerate() {
+        let ss = &s[i * width..(i + 1) * width];
+        let v = u64::from_str_radix(ss, 2);
         match v {
             Ok(v) => {
                 *t = v;

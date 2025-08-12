@@ -385,6 +385,13 @@ impl Lut {
         fill_hex(ret.num_vars(), ret.table.as_mut(), s)?;
         Ok(ret)
     }
+
+    /// Build a Lut from a binary string
+    pub fn from_bin_string(num_vars: usize, s: &str) -> Result<Self, ()> {
+        let mut ret = Lut::zero(num_vars);
+        fill_bin(ret.num_vars(), ret.table.as_mut(), s)?;
+        Ok(ret)
+    }
 }
 
 #[doc(hidden)]
@@ -1130,6 +1137,10 @@ mod tests {
                 assert_eq!(
                     lut,
                     Lut::from_hex_string(num_vars, &lut.to_hex_string()).unwrap()
+                );
+                assert_eq!(
+                    lut,
+                    Lut::from_bin_string(num_vars, &lut.to_bin_string()).unwrap()
                 );
             }
         }
