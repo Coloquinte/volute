@@ -4,7 +4,7 @@
 
 <!-- cargo-rdme start -->
 
-Logic function manipulation using truth tables (LUTs)
+Logic function manipulation using truth tables (LUTs) that represent the value of the function for the 2<sup>n</sup> possible inputs.
 
 The crate implements truth table datastructures, either arbitrary-size truth tables
 ([`Lut`](https://docs.rs/volute/latest/volute/struct.Lut.html)), or more efficient
@@ -44,6 +44,13 @@ Check its value in binary.
 let lut = Lut::parity(3);
 assert_eq!(lut.top_decomposition(0), DecompositionType::Xor);
 assert_eq!(format!("{:b}", lut), "Lut3(10010110)");
+```
+
+Create a Lut2 and swap its inputs.
+Check the result.
+```rust
+let lut = Lut2::nth_var(0);
+assert_eq!(lut.swap(0, 1), Lut2::nth_var(1));
 ```
 
 <!-- cargo-rdme end -->
