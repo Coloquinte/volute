@@ -1,16 +1,18 @@
 #![warn(missing_docs)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
-//! Logic function manipulation using truth tables (LUTs) that represent the value of the function for the 2<sup>n</sup> possible inputs.
+//! Logic function manipulation using truth tables (LUTs) that represent the
+//! value of the function for the 2<sup>n</sup> possible inputs.
 //!
-//! The crate implements truth table datastructures, either arbitrary-size truth tables
+//! The crate implements optimized truth table datastructures, either arbitrary-size truth tables
 //! ([`Lut`](https://docs.rs/volute/latest/volute/struct.Lut.html)), or more efficient
 //! fixed-size truth tables ([`Lut2` to `Lut12`](https://docs.rs/volute/latest/volute/struct.StaticLut.html)).
 //! They provide logical operators and utility functions for analysis, canonization and decomposition.
 //! Some support is available for other standard representation, such as Sum-of-Products
 //! ([`Sop`](https://docs.rs/volute/latest/volute/sop/struct.Sop.html)).
 //!
-//! API and documentation try to follow the same terminology as the C++ library [Kitty](https://libkitty.readthedocs.io/en/latest).
+//! API and documentation try to follow the same terminology as the C++ library
+//! [Kitty](https://libkitty.readthedocs.io/en/latest).
 //!
 //! # Examples
 //!
@@ -30,6 +32,15 @@
 //! assert_eq!(lut.to_string(), "Lut4(a0a0)");
 //! ```
 //!
+//! Create a Lut6 (six variables) from its hexadecimal value
+//! Display its hexadecimal value.
+//! ```
+//! # use volute::Lut6;
+//! # use std::fmt::Display;
+//! let lut = Lut6::from_hex_string("0123456789abcdef").unwrap();
+//! print!("{lut}");
+//! ```
+//!
 //! Create a random Lut6 (six variables).
 //! Display its hexadecimal value.
 //! ```
@@ -37,7 +48,7 @@
 //! # #[cfg(feature = "rand")]
 //! let lut = Lut6::random();
 //! # #[cfg(feature = "rand")]
-//! print!("{}", lut);
+//! print!("{lut}");
 //! ```
 //!
 //! Create the parity function on three variables, and check that in can be decomposed as a Xor.
@@ -47,7 +58,7 @@
 //! # use volute::DecompositionType;
 //! let lut = Lut::parity(3);
 //! assert_eq!(lut.top_decomposition(0), DecompositionType::Xor);
-//! assert_eq!(format!("{:b}", lut), "Lut3(10010110)");
+//! assert_eq!(format!("{lut:b}"), "Lut3(10010110)");
 //! ```
 //!
 //! Create a Lut2 and swap its inputs.
@@ -57,6 +68,33 @@
 //! let lut = Lut2::nth_var(0);
 //! assert_eq!(lut.swap(0, 1), Lut2::nth_var(1));
 //! ```
+//!
+//! ## Sum of products and Exclusive sum of products
+//!
+//! Volute provides Sum-of-Products (SOP) and Exclusive Sum-of-Products (ESOP)
+//! representations, including exact decomposition methods using a MILP solver
+//! or a SAT solver.
+//!
+//!  ```
+//! # use volute::Lut;
+//! # use volute::sop;
+//! let lut = Lut::parity(6);
+//! # #[cfg(feature = "optim-mip")]
+//! let sop = sop::optim::optimize_esop_mip(&[lut], 1, 2);
+//! ```
+//!
+//! ## Canonical representation
+//!
+//! For boolean optimization, Luts can be represented by a canonical
+//! representation, that is identical up to variable complementation (N),
+//! input permutation (P), or both (NPN).
+//!
+//!  ```
+//! # use volute::Lut6;
+//! let lut = Lut6::parity();
+//! let (canonical, perm, flips) = lut.npn_canonization();
+//! ```
+//!
 
 mod bdd;
 mod canonization;
