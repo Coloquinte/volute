@@ -3,7 +3,6 @@
 use std::cmp::max;
 use std::iter::zip;
 
-use rustsat::instances::ManageVars;
 use rustsat::instances::SatInstance;
 use rustsat::solvers::Solve;
 use rustsat::solvers::SolverResult;
@@ -81,7 +80,7 @@ impl<'a> SopModeler<'a> {
     fn build_variables(&mut self, n: usize) -> Vec<Lit> {
         let mut ret = Vec::new();
         for _ in 0..n {
-            ret.push(self.instance.var_manager().new_var().pos_lit());
+            ret.push(self.instance.new_var().pos_lit());
         }
         ret
     }
@@ -91,7 +90,7 @@ impl<'a> SopModeler<'a> {
         for _ in 0..n {
             let mut fn_vars = Vec::new();
             for _ in self.functions {
-                fn_vars.push(self.instance.var_manager().new_var().pos_lit());
+                fn_vars.push(self.instance.new_var().pos_lit());
             }
             ret.push(fn_vars);
         }
@@ -217,7 +216,7 @@ impl<'a> SopModeler<'a> {
             ));
         }
         let mut solver = rustsat_kissat::Kissat::default();
-        solver.add_cnf(inst.clone().as_cnf().0).unwrap();
+        solver.add_cnf(inst.into_cnf().0).unwrap();
         if solver.solve().unwrap() == SolverResult::Sat {
             let sol = solver.solution(self.max_var()).unwrap();
             Some(sol)
@@ -368,7 +367,7 @@ impl<'a> EsopModeler<'a> {
     fn build_variables(&mut self, n: usize) -> Vec<Lit> {
         let mut ret = Vec::new();
         for _ in 0..n {
-            ret.push(self.instance.var_manager().new_var().pos_lit());
+            ret.push(self.instance.new_var().pos_lit());
         }
         ret
     }
@@ -378,7 +377,7 @@ impl<'a> EsopModeler<'a> {
         for _ in 0..n {
             let mut fn_vars = Vec::new();
             for _ in self.functions {
-                fn_vars.push(self.instance.var_manager().new_var().pos_lit());
+                fn_vars.push(self.instance.new_var().pos_lit());
             }
             ret.push(fn_vars);
         }
@@ -424,7 +423,7 @@ impl<'a> EsopModeler<'a> {
         let mut xor_val = vars[0];
         for i in 1..vars.len() {
             let v = vars[i];
-            let next_val = self.instance.var_manager().new_var().pos_lit();
+            let next_val = self.instance.new_var().pos_lit();
             self.instance.add_ternary(!xor_val, !next_val, !v);
             self.instance.add_ternary(!xor_val, next_val, v);
             self.instance.add_ternary(xor_val, !next_val, v);
@@ -508,7 +507,7 @@ impl<'a> EsopModeler<'a> {
             ));
         }
         let mut solver = rustsat_kissat::Kissat::default();
-        solver.add_cnf(inst.clone().as_cnf().0).unwrap();
+        solver.add_cnf(inst.into_cnf().0).unwrap();
         if solver.solve().unwrap() == SolverResult::Sat {
             let sol = solver.solution(self.max_var()).unwrap();
             Some(sol)

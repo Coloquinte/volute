@@ -660,6 +660,12 @@ impl From<u64> for Lut6 {
     }
 }
 
+impl From<u128> for Lut7 {
+    fn from(table: u128) -> Lut7 {
+        Lut7::from_blocks(&[(table & 0xffff_ffff_ffff_ffff) as u64, (table >> 64) as u64])
+    }
+}
+
 impl From<Lut3> for u8 {
     fn from(lut: Lut3) -> u8 {
         (lut.table[0] & !VAR_MASK[3]) as u8
@@ -681,6 +687,12 @@ impl From<Lut5> for u32 {
 impl From<Lut6> for u64 {
     fn from(lut: Lut6) -> u64 {
         lut.table[0]
+    }
+}
+
+impl From<Lut7> for u128 {
+    fn from(lut: Lut7) -> u128 {
+        lut.table[0] as u128 + ((lut.table[1] as u128) << 64)
     }
 }
 
@@ -791,18 +803,27 @@ mod tests {
         for _ in 0..10 {
             let lut = Lut3::random();
             assert_eq!(lut, Lut3::from(u8::from(lut)));
+            assert_eq!(lut.to_hex_string(), format!("{:02x}", u8::from(lut)));
         }
         for _ in 0..10 {
             let lut = Lut4::random();
             assert_eq!(lut, Lut4::from(u16::from(lut)));
+            assert_eq!(lut.to_hex_string(), format!("{:04x}", u16::from(lut)));
         }
         for _ in 0..10 {
             let lut = Lut5::random();
             assert_eq!(lut, Lut5::from(u32::from(lut)));
+            assert_eq!(lut.to_hex_string(), format!("{:08x}", u32::from(lut)));
         }
         for _ in 0..10 {
             let lut = Lut6::random();
             assert_eq!(lut, Lut6::from(u64::from(lut)));
+            assert_eq!(lut.to_hex_string(), format!("{:016x}", u64::from(lut)));
+        }
+        for _ in 0..10 {
+            let lut = Lut7::random();
+            assert_eq!(lut, Lut7::from(u128::from(lut)));
+            assert_eq!(lut.to_hex_string(), format!("{:032x}", u128::from(lut)));
         }
     }
 

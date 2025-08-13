@@ -1,12 +1,12 @@
 [package]
 name = "volute"
-version = "1.1.5"
+version = "1.1.6"
 edition = "2021"
 
 authors = ["Gabriel Gouvine <gabriel.gouvine_cargo@m4x.org>"]
 description = "Boolean functions implementation, represented as lookup tables (LUT) or sum-of-products (SOP)"
 license = "MIT OR Apache-2.0"
-keywords = ["boolean", "logic", "LUT", "lookup-table", "truth-table"]
+keywords = ["boolean-logic", "lookup-table", "truth-table"]
 repository = "https://github.com/Coloquinte/volute"
 homepage = "https://github.com/Coloquinte/volute"
 categories = ["mathematics", "algorithms"]
