@@ -152,6 +152,16 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
         unset_bit(N, self.table.as_mut(), mask);
     }
 
+    /// Count the number of one bits in the Lut
+    pub fn count_ones(&self) -> usize {
+        count_ones(N, self.table.as_ref())
+    }
+
+    /// Count the number of zero bits in the Lut
+    pub fn count_zeros(&self) -> usize {
+        count_zeros(N, self.table.as_ref())
+    }
+
     /// Complement the Lut in place: f(x) --> !f(x)
     pub fn not_inplace(&mut self) {
         not_inplace(N, self.table.as_mut());

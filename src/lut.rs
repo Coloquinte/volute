@@ -156,6 +156,16 @@ impl Lut {
         unset_bit(self.num_vars, self.table.as_mut(), mask);
     }
 
+    /// Count the number of one bits in the Lut
+    pub fn count_ones(&self) -> usize {
+        count_ones(self.num_vars, self.table.as_ref())
+    }
+
+    /// Count the number of zero bits in the Lut
+    pub fn count_zeros(&self) -> usize {
+        count_zeros(self.num_vars, self.table.as_ref())
+    }
+
     /// Complement the Lut in place: f(x) --> !f(x)
     pub fn not_inplace(&mut self) {
         not_inplace(self.num_vars, self.table.as_mut());
@@ -796,6 +806,14 @@ mod tests {
     }
 
     #[test]
+    fn test_not() {
+        for lut_size in 1..10 {
+            assert_eq!(Lut::zero(lut_size), !Lut::one(lut_size));
+            assert_eq!(!Lut::zero(lut_size), Lut::one(lut_size));
+        }
+    }
+
+    #[test]
     fn test_flip() {
         for lut_size in 1..10 {
             // All luts that copy a single variable
@@ -820,6 +838,28 @@ mod tests {
                     assert_eq!(l2, l2c.flip(i));
                 }
             }
+        }
+    }
+
+    #[test]
+    fn test_count() {
+        for lut_size in 1..10 {
+            // All luts that copy a single variable
+            for i in 0..lut_size {
+                let l = Lut::nth_var(lut_size, i);
+                assert_eq!(l.count_ones(), l.num_bits() >> 1);
+                assert_eq!(l.count_zeros(), l.num_bits() >> 1);
+            }
+            assert_eq!(Lut::zero(lut_size).count_ones(), 0);
+            assert_eq!(Lut::zero(lut_size).count_zeros(), 1 << lut_size);
+            assert_eq!(Lut::one(lut_size).count_ones(), 1 << lut_size);
+            assert_eq!(Lut::one(lut_size).count_zeros(), 0);
+
+            // Check potentially one MSBs
+            assert_eq!((!Lut::zero(lut_size)).count_ones(), 1 << lut_size);
+            assert_eq!((!Lut::zero(lut_size)).count_zeros(), 0);
+            assert_eq!((!Lut::one(lut_size)).count_ones(), 0);
+            assert_eq!((!Lut::one(lut_size)).count_zeros(), 1 << lut_size);
         }
     }
 

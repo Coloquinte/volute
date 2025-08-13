@@ -174,6 +174,7 @@ pub fn fill_random(num_vars: usize, table: &mut [u64]) {
         *t = rand::thread_rng().next_u64() & num_vars_mask(num_vars);
     }
 }
+
 /// Get a single bit in a LUT from a mask
 pub fn get_bit(num_vars: usize, table: &[u64], ind: usize) -> bool {
     debug_assert!(ind < 1 << num_vars);
@@ -190,6 +191,16 @@ pub fn set_bit(num_vars: usize, table: &mut [u64], ind: usize) {
 pub fn unset_bit(num_vars: usize, table: &mut [u64], ind: usize) {
     debug_assert!(ind < 1 << num_vars);
     table[ind >> 6] &= !(1 << (ind & 0x3f));
+}
+
+/// Count the ones in a Lut
+pub fn count_ones(_num_vars: usize, table: &[u64]) -> usize {
+    table.iter().map(|t| t.count_ones() as usize).sum()
+}
+
+/// Count the zeros in a Lut
+pub fn count_zeros(num_vars: usize, table: &[u64]) -> usize {
+    (1 << num_vars) - count_ones(num_vars, table)
 }
 
 /// Logical not computation
