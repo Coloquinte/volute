@@ -6,7 +6,7 @@ use std::iter::zip;
 use rustsat::instances::SatInstance;
 use rustsat::solvers::Solve;
 use rustsat::solvers::SolverResult;
-use rustsat::types::constraints::PBConstraint;
+use rustsat::types::constraints::PbConstraint;
 use rustsat::types::Assignment;
 use rustsat::types::Clause;
 use rustsat::types::Lit;
@@ -210,7 +210,7 @@ impl<'a> SopModeler<'a> {
     fn solve_constrained(&self, max_obj: Option<isize>) -> Option<Assignment> {
         let mut inst = self.instance.clone();
         if let Some(max_obj) = max_obj {
-            inst.add_pb_constr(PBConstraint::new_ub(
+            inst.add_pb_constr(PbConstraint::new_ub(
                 self.objective.clone().into_iter(),
                 max_obj,
             ));
@@ -501,7 +501,7 @@ impl<'a> EsopModeler<'a> {
     fn solve_constrained(&self, max_obj: Option<isize>) -> Option<Assignment> {
         let mut inst = self.instance.clone();
         if let Some(max_obj) = max_obj {
-            inst.add_pb_constr(PBConstraint::new_ub(
+            inst.add_pb_constr(PbConstraint::new_ub(
                 self.objective.clone().into_iter(),
                 max_obj,
             ));

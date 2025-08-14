@@ -17,8 +17,8 @@ rand = { version = "0.8.5", optional = true }
 # For optimization using Mixed-Integer-Programming
 good_lp = { version = "1.7", features = ["highs"], default-features = false, optional = true }
 # For optimization using SAT solvers
-rustsat = { version = "0.5.1", optional = true }
-rustsat-kissat = { version = "0.2.1", optional = true }
+rustsat = { version = "0.7", optional = true }
+rustsat-kissat = { version = "0.7", optional = true }
 
 [features]
 default = ["rand"]
