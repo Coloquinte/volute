@@ -157,7 +157,7 @@ pub fn p_canonization_ind(
     all_swaps: &[u8],
 ) -> usize {
     best.clone_from_slice(table);
-    let mut best_ind = 0;
+    let mut best_ind = usize::MAX;
     for (ind, &swap) in all_swaps.iter().enumerate() {
         swap_adjacent_inplace(num_vars, table, swap as usize);
         if cmp(table, best).is_lt() {
@@ -176,10 +176,10 @@ pub fn n_canonization_ind(
     all_flips: &[u8],
 ) -> usize {
     best.clone_from_slice(table);
-    let mut best_ind = 0;
+    let mut best_ind = usize::MAX;
     let mut ind = 0;
-    for flip in all_flips {
-        flip_inplace(num_vars, table, *flip as usize);
+    for &flip in all_flips {
+        flip_inplace(num_vars, table, flip as usize);
         for _ in 0..2 {
             not_inplace(num_vars, table);
             if cmp(table, best).is_lt() {
@@ -200,7 +200,7 @@ pub fn npn_canonization_ind(
     all_flips: &[u8],
 ) -> usize {
     best.clone_from_slice(table);
-    let mut best_ind = 0;
+    let mut best_ind = usize::MAX;
     let mut ind = 0;
     for swap in all_swaps {
         swap_adjacent_inplace(num_vars, table, *swap as usize);
@@ -221,10 +221,13 @@ pub fn npn_canonization_ind(
 
 /// Find the corresponding permutation given the index of the best result
 pub fn p_canonization_res(num_vars: usize, res_perm: &mut [u8], all_swaps: &[u8], best_ind: usize) {
-    assert!(best_ind <= all_swaps.len());
-    assert_eq!(res_perm.len(), num_vars);
+    debug_assert!(best_ind == usize::MAX || best_ind < all_swaps.len());
+    debug_assert_eq!(res_perm.len(), num_vars);
     for (i, p) in res_perm.iter_mut().enumerate() {
         *p = i as u8;
+    }
+    if best_ind == usize::MAX {
+        return;
     }
     for (ind, &swap) in all_swaps.iter().enumerate() {
         let swp = swap as usize;
@@ -234,15 +237,18 @@ pub fn p_canonization_res(num_vars: usize, res_perm: &mut [u8], all_swaps: &[u8]
         }
     }
     // Should never arrive there...
-    panic!();
+    panic!("P-canonization reached an invalid state");
 }
 
 /// Find the corresponding complementation given the index of the best result
 pub fn n_canonization_res(num_vars: usize, all_flips: &[u8], best_ind: usize) -> u32 {
     let mut ind = 0;
     let mut cur_flip = 0;
-    for flip in all_flips {
-        cur_flip ^= 1 << *flip;
+    if best_ind == usize::MAX {
+        return cur_flip;
+    }
+    for &flip in all_flips {
+        cur_flip ^= 1 << flip;
         for _ in 0..2 {
             cur_flip ^= 1 << num_vars;
             if ind == best_ind {
@@ -252,7 +258,7 @@ pub fn n_canonization_res(num_vars: usize, all_flips: &[u8], best_ind: usize) ->
         }
     }
     // Should never arrive there...
-    panic!();
+    panic!("N-canonization reached an invalid state");
 }
 
 /// Find the corresponding permutation and complementation given the index of the best result
@@ -269,6 +275,9 @@ pub fn npn_canonization_res(
     }
     let mut ind = 0;
     let mut cur_flip = 0;
+    if best_ind == usize::MAX {
+        return cur_flip;
+    }
 
     for swap in all_swaps {
         let swp = *swap as usize;
@@ -285,7 +294,7 @@ pub fn npn_canonization_res(
         }
     }
     // Should never arrive there...
-    panic!();
+    panic!("NPN-canonization reached an invalid state");
 }
 
 // TODO: handle 0 and 1 input cases, where the flip or swap list may be empty
