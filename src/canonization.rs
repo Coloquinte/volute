@@ -108,14 +108,13 @@ fn generate_single_swap_permutations(num_vars: usize) -> Vec<Vec<u8>> {
     if num_vars == 0 {
         vec![vec![]]
     } else if num_vars == 1 {
-        return vec![vec![0]];
+        vec![vec![0]]
     } else if num_vars == 2 {
-        return vec![vec![1, 0], vec![0, 1]];
+        vec![vec![1, 0], vec![0, 1]]
     } else {
         let all_perms = generate_single_swap_permutations(num_vars - 1);
         let mut next_perms: Vec<Vec<u8>> = vec![];
-        for i in 0..all_perms.len() {
-            let cur = &all_perms[i];
+        for (i, cur) in all_perms.iter().enumerate() {
             if i % 2 == 0 {
                 for j in 0..cur.len() + 1 {
                     let mut p = cur.clone();
@@ -159,14 +158,12 @@ pub fn p_canonization_ind(
 ) -> usize {
     best.clone_from_slice(table);
     let mut best_ind = 0;
-    let mut ind = 0;
-    for swap in all_swaps {
-        swap_adjacent_inplace(num_vars, table, *swap as usize);
+    for (ind, &swap) in all_swaps.iter().enumerate() {
+        swap_adjacent_inplace(num_vars, table, swap as usize);
         if cmp(table, best).is_lt() {
             best_ind = ind;
             best.clone_from_slice(table);
         }
-        ind += 1
     }
     best_ind
 }
@@ -226,17 +223,15 @@ pub fn npn_canonization_ind(
 pub fn p_canonization_res(num_vars: usize, res_perm: &mut [u8], all_swaps: &[u8], best_ind: usize) {
     assert!(best_ind <= all_swaps.len());
     assert_eq!(res_perm.len(), num_vars);
-    for i in 0..res_perm.len() {
-        res_perm[i] = i as u8;
+    for (i, p) in res_perm.iter_mut().enumerate() {
+        *p = i as u8;
     }
-    let mut ind = 0;
-    for swap in all_swaps {
-        let swp = *swap as usize;
+    for (ind, &swap) in all_swaps.iter().enumerate() {
+        let swp = swap as usize;
         res_perm.swap(swp, swp + 1);
         if ind == best_ind {
             return;
         }
-        ind += 1;
     }
     // Should never arrive there...
     panic!();
@@ -269,8 +264,8 @@ pub fn npn_canonization_res(
     best_ind: usize,
 ) -> u32 {
     assert_eq!(res_perm.len(), num_vars);
-    for i in 0..res_perm.len() {
-        res_perm[i] = i as u8;
+    for (i, p) in res_perm.iter_mut().enumerate() {
+        *p = i as u8;
     }
     let mut ind = 0;
     let mut cur_flip = 0;
