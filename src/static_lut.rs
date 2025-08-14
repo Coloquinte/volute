@@ -16,30 +16,32 @@ use crate::Lut;
 
 /// Fixed-size truth table representing a N-input boolean function with 2^N bits; more compact than [`Lut`](crate::Lut) when the size is known
 #[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
-pub struct StaticLut<const N: usize, const T: usize> {
-    table: [u64; T],
+pub struct StaticLut<const NUM_VARS: usize, const NUM_WORDS: usize> {
+    table: [u64; NUM_WORDS],
 }
 
-impl<const N: usize, const T: usize> Default for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> Default for StaticLut<NUM_VARS, NUM_WORDS> {
     fn default() -> Self {
-        Self { table: [0u64; T] }
+        Self {
+            table: [0u64; NUM_WORDS],
+        }
     }
 }
 
-impl<const N: usize, const T: usize> StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> StaticLut<NUM_VARS, NUM_WORDS> {
     /// Query the number of variables of the Lut
     pub fn num_vars(&self) -> usize {
-        N
+        NUM_VARS
     }
 
     /// Query the number of bits in the Lut
     pub fn num_bits(&self) -> usize {
-        1 << N
+        1 << NUM_VARS
     }
 
     /// Query the number of 64-bit blocks in the Lut
     pub fn num_blocks(&self) -> usize {
-        table_size(N)
+        table_size(NUM_VARS)
     }
 
     /// Check that an input is valid for an operation
@@ -60,7 +62,7 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
     /// Create a constant true Lut
     pub fn one() -> Self {
         let mut ret = Self::default();
-        fill_one(N, ret.table.as_mut());
+        fill_one(NUM_VARS, ret.table.as_mut());
         ret
     }
 
@@ -71,44 +73,44 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
 
     /// Create a Lut returning the value of one of its variables
     pub fn nth_var(var: usize) -> Self {
-        assert!(var < N);
+        assert!(var < NUM_VARS);
         let mut ret = Self::default();
-        fill_nth_var(N, ret.table.as_mut(), var);
+        fill_nth_var(NUM_VARS, ret.table.as_mut(), var);
         ret
     }
 
     /// Create a Lut returning true if the number of true variables is even
     pub fn parity() -> Self {
         let mut ret = Self::default();
-        fill_parity(N, ret.table.as_mut());
+        fill_parity(NUM_VARS, ret.table.as_mut());
         ret
     }
 
     /// Create a Lut returning true if the majority of the variables are true
     pub fn majority() -> Self {
         let mut ret = Self::default();
-        fill_majority(N, ret.table.as_mut());
+        fill_majority(NUM_VARS, ret.table.as_mut());
         ret
     }
 
     /// Create a Lut returning true if at least k variables are true
     pub fn threshold(k: usize) -> Self {
         let mut ret = Self::default();
-        fill_threshold(N, ret.table.as_mut(), k);
+        fill_threshold(NUM_VARS, ret.table.as_mut(), k);
         ret
     }
 
     /// Create a Lut returning true if exactly k variables are true
     pub fn equals(k: usize) -> Self {
         let mut ret = Self::default();
-        fill_equals(N, ret.table.as_mut(), k);
+        fill_equals(NUM_VARS, ret.table.as_mut(), k);
         ret
     }
 
     /// Create a Lut representing a symmetric function. Bit at position k gives the value when k variables are true
     pub fn symmetric(count_values: usize) -> Self {
         let mut ret = Self::default();
-        fill_symmetric(N, ret.table.as_mut(), count_values);
+        fill_symmetric(NUM_VARS, ret.table.as_mut(), count_values);
         ret
     }
 
@@ -116,7 +118,7 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
     #[cfg(feature = "rand")]
     pub fn random() -> Self {
         let mut ret = Self::default();
-        fill_random(N, ret.table.as_mut());
+        fill_random(NUM_VARS, ret.table.as_mut());
         ret
     }
 
@@ -128,7 +130,7 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
     /// Get the value of the Lut for these inputs (input bits packed in the mask)
     pub fn get_bit(&self, mask: usize) -> bool {
         self.check_bit(mask);
-        get_bit(N, self.table.as_ref(), mask)
+        get_bit(NUM_VARS, self.table.as_ref(), mask)
     }
 
     /// Set the value of the Lut for these inputs (input bits packed in the mask)
@@ -143,28 +145,28 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
     /// Set the value of the Lut for these inputs to true (input bits packed in the mask)
     pub fn set_bit(&mut self, mask: usize) {
         self.check_bit(mask);
-        set_bit(N, self.table.as_mut(), mask);
+        set_bit(NUM_VARS, self.table.as_mut(), mask);
     }
 
     /// Set the value of the Lut for these inputs to false (input bits packed in the mask)
     pub fn unset_bit(&mut self, mask: usize) {
         self.check_bit(mask);
-        unset_bit(N, self.table.as_mut(), mask);
+        unset_bit(NUM_VARS, self.table.as_mut(), mask);
     }
 
     /// Count the number of one bits in the Lut
     pub fn count_ones(&self) -> usize {
-        count_ones(N, self.table.as_ref())
+        count_ones(NUM_VARS, self.table.as_ref())
     }
 
     /// Count the number of zero bits in the Lut
     pub fn count_zeros(&self) -> usize {
-        count_zeros(N, self.table.as_ref())
+        count_zeros(NUM_VARS, self.table.as_ref())
     }
 
     /// Complement the Lut in place: f(x) --> !f(x)
     pub fn not_inplace(&mut self) {
-        not_inplace(N, self.table.as_mut());
+        not_inplace(NUM_VARS, self.table.as_mut());
     }
 
     /// And two Luts in place
@@ -188,25 +190,25 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
     /// Flip a variable in place: f(x1, ... xi, ... xn) --> f(x1, ... !xi, ... xn)
     pub fn flip_inplace(&mut self, ind: usize) {
         self.check_var(ind);
-        flip_inplace(N, self.table.as_mut(), ind);
+        flip_inplace(NUM_VARS, self.table.as_mut(), ind);
     }
 
     /// Swap two variables in place: f(..., xi, ..., xj, ...) --> f(..., xj, ..., xi, ...)
     pub fn swap_inplace(&mut self, ind1: usize, ind2: usize) {
         self.check_var(ind1);
         self.check_var(ind2);
-        swap_inplace(N, self.table.as_mut(), ind1, ind2);
+        swap_inplace(NUM_VARS, self.table.as_mut(), ind1, ind2);
     }
 
     /// Swap two adjacent variables in place: f(..., xi, x+1, ...) --> f(..., xi+1, xi, ...)
     pub fn swap_adjacent_inplace(&mut self, ind: usize) {
         self.check_var(ind);
         self.check_var(ind + 1);
-        swap_adjacent_inplace(N, self.table.as_mut(), ind);
+        swap_adjacent_inplace(NUM_VARS, self.table.as_mut(), ind);
     }
 
     /// Complement the Lut: f(x) --> !f(x)
-    pub fn not(&self) -> StaticLut<N, T> {
+    pub fn not(&self) -> StaticLut<NUM_VARS, NUM_WORDS> {
         let mut l = *self;
         l.not_inplace();
         l
@@ -266,7 +268,7 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
     pub fn from_cofactors(c0: &Self, c1: &Self, ind: usize) -> Self {
         let mut ret = Self::zero();
         from_cofactors_inplace(
-            N,
+            NUM_VARS,
             ret.table.as_mut(),
             c0.table.as_ref(),
             c1.table.as_ref(),
@@ -289,11 +291,16 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
 
     /// Find the smallest equivalent Lut up to permutation.
     /// Return the canonical representation and the input permutation to obtain it.
-    pub fn p_canonization(&self) -> (Self, [u8; N]) {
+    pub fn p_canonization(&self) -> (Self, [u8; NUM_VARS]) {
         let mut work = *self;
         let mut ret = *self;
-        let mut perm = [0; N];
-        p_canonization(N, work.table.as_mut(), ret.table.as_mut(), perm.as_mut());
+        let mut perm = [0; NUM_VARS];
+        p_canonization(
+            NUM_VARS,
+            work.table.as_mut(),
+            ret.table.as_mut(),
+            perm.as_mut(),
+        );
         (ret, perm)
     }
 
@@ -302,37 +309,42 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
     pub fn n_canonization(&self) -> (Self, u32) {
         let mut work = *self;
         let mut ret = *self;
-        let flip = n_canonization(N, work.table.as_mut(), ret.table.as_mut());
+        let flip = n_canonization(NUM_VARS, work.table.as_mut(), ret.table.as_mut());
         (ret, flip)
     }
 
     /// Find the smallest equivalent Lut up to permutation, input flips and output flip.
     /// Return the canonical representation and the permutation and flips to obtain it.
-    pub fn npn_canonization(&self) -> (Self, [u8; N], u32) {
+    pub fn npn_canonization(&self) -> (Self, [u8; NUM_VARS], u32) {
         let mut work = *self;
         let mut ret = *self;
-        let mut perm = [0; N];
-        let flip = npn_canonization(N, work.table.as_mut(), ret.table.as_mut(), perm.as_mut());
+        let mut perm = [0; NUM_VARS];
+        let flip = npn_canonization(
+            NUM_VARS,
+            work.table.as_mut(),
+            ret.table.as_mut(),
+            perm.as_mut(),
+        );
         (ret, perm, flip)
     }
 
     /// Top decomposition of the function with respect to this variable
     pub fn top_decomposition(&self, ind: usize) -> DecompositionType {
-        top_decomposition(N, self.table.as_ref(), ind)
+        top_decomposition(NUM_VARS, self.table.as_ref(), ind)
     }
 
     /// Returns whether the function is positive unate
     pub fn is_pos_unate(&self, ind: usize) -> bool {
-        input_pos_unate(N, self.table.as_ref(), ind)
+        input_pos_unate(NUM_VARS, self.table.as_ref(), ind)
     }
 
     /// Returns whether the function is negative unate
     pub fn is_neg_unate(&self, ind: usize) -> bool {
-        input_neg_unate(N, self.table.as_ref(), ind)
+        input_neg_unate(NUM_VARS, self.table.as_ref(), ind)
     }
 
     /// Collection of all Luts of this size
-    pub fn all_functions() -> StaticLutIterator<N, T> {
+    pub fn all_functions() -> StaticLutIterator<NUM_VARS, NUM_WORDS> {
         StaticLutIterator {
             lut: StaticLut::zero(),
             ok: true,
@@ -348,7 +360,7 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
         for l in luts {
             table.extend(l.blocks().iter());
         }
-        table_complexity(N, table.as_slice())
+        table_complexity(NUM_VARS, table.as_slice())
     }
 
     /// Return the hexadecimal string representing the function
@@ -381,38 +393,40 @@ impl<const N: usize, const T: usize> StaticLut<N, T> {
 }
 
 #[doc(hidden)]
-pub struct StaticLutIterator<const N: usize, const T: usize> {
-    lut: StaticLut<N, T>,
+pub struct StaticLutIterator<const NUM_VARS: usize, const NUM_WORDS: usize> {
+    lut: StaticLut<NUM_VARS, NUM_WORDS>,
     ok: bool,
 }
 
-impl<const N: usize, const T: usize> Iterator for StaticLutIterator<N, T> {
-    type Item = StaticLut<N, T>;
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> Iterator
+    for StaticLutIterator<NUM_VARS, NUM_WORDS>
+{
+    type Item = StaticLut<NUM_VARS, NUM_WORDS>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if !self.ok {
             None
         } else {
             let ret = self.lut;
-            self.ok = next_inplace(N, self.lut.table.as_mut());
+            self.ok = next_inplace(NUM_VARS, self.lut.table.as_mut());
             Some(ret)
         }
     }
 }
 
-impl<const N: usize, const T: usize> Ord for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> Ord for StaticLut<NUM_VARS, NUM_WORDS> {
     fn cmp(&self, other: &Self) -> Ordering {
         cmp(self.table.as_ref(), other.table.as_ref())
     }
 }
 
-impl<const N: usize, const T: usize> PartialOrd for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> PartialOrd for StaticLut<NUM_VARS, NUM_WORDS> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl<const N: usize, const T: usize> Not for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> Not for StaticLut<NUM_VARS, NUM_WORDS> {
     type Output = Self;
     fn not(self) -> Self::Output {
         let mut l = self;
@@ -421,8 +435,8 @@ impl<const N: usize, const T: usize> Not for StaticLut<N, T> {
     }
 }
 
-impl<const N: usize, const T: usize> Not for &StaticLut<N, T> {
-    type Output = StaticLut<N, T>;
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> Not for &StaticLut<NUM_VARS, NUM_WORDS> {
+    type Output = StaticLut<NUM_VARS, NUM_WORDS>;
     fn not(self) -> Self::Output {
         let mut l = *self;
         l.not_inplace();
@@ -430,19 +444,25 @@ impl<const N: usize, const T: usize> Not for &StaticLut<N, T> {
     }
 }
 
-impl<const N: usize, const T: usize> BitAndAssign<StaticLut<N, T>> for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitAndAssign<StaticLut<NUM_VARS, NUM_WORDS>>
+    for StaticLut<NUM_VARS, NUM_WORDS>
+{
     fn bitand_assign(&mut self, rhs: Self) {
         and_inplace(self.table.as_mut(), rhs.table.as_ref());
     }
 }
 
-impl<const N: usize, const T: usize> BitAndAssign<&StaticLut<N, T>> for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitAndAssign<&StaticLut<NUM_VARS, NUM_WORDS>>
+    for StaticLut<NUM_VARS, NUM_WORDS>
+{
     fn bitand_assign(&mut self, rhs: &Self) {
         and_inplace(self.table.as_mut(), rhs.table.as_ref());
     }
 }
 
-impl<const N: usize, const T: usize> BitAnd<StaticLut<N, T>> for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitAnd<StaticLut<NUM_VARS, NUM_WORDS>>
+    for StaticLut<NUM_VARS, NUM_WORDS>
+{
     type Output = Self;
     fn bitand(self, rhs: Self) -> Self::Output {
         let mut l = self;
@@ -451,46 +471,58 @@ impl<const N: usize, const T: usize> BitAnd<StaticLut<N, T>> for StaticLut<N, T>
     }
 }
 
-impl<const N: usize, const T: usize> BitAnd<&StaticLut<N, T>> for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitAnd<&StaticLut<NUM_VARS, NUM_WORDS>>
+    for StaticLut<NUM_VARS, NUM_WORDS>
+{
     type Output = Self;
-    fn bitand(self, rhs: &StaticLut<N, T>) -> Self::Output {
+    fn bitand(self, rhs: &StaticLut<NUM_VARS, NUM_WORDS>) -> Self::Output {
         let mut l = self;
         l &= rhs;
         l
     }
 }
 
-impl<const N: usize, const T: usize> BitAnd<StaticLut<N, T>> for &StaticLut<N, T> {
-    type Output = StaticLut<N, T>;
-    fn bitand(self, rhs: StaticLut<N, T>) -> Self::Output {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitAnd<StaticLut<NUM_VARS, NUM_WORDS>>
+    for &StaticLut<NUM_VARS, NUM_WORDS>
+{
+    type Output = StaticLut<NUM_VARS, NUM_WORDS>;
+    fn bitand(self, rhs: StaticLut<NUM_VARS, NUM_WORDS>) -> Self::Output {
         let mut l = *self;
         l &= rhs;
         l
     }
 }
 
-impl<const N: usize, const T: usize> BitAnd<&StaticLut<N, T>> for &StaticLut<N, T> {
-    type Output = StaticLut<N, T>;
-    fn bitand(self, rhs: &StaticLut<N, T>) -> Self::Output {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitAnd<&StaticLut<NUM_VARS, NUM_WORDS>>
+    for &StaticLut<NUM_VARS, NUM_WORDS>
+{
+    type Output = StaticLut<NUM_VARS, NUM_WORDS>;
+    fn bitand(self, rhs: &StaticLut<NUM_VARS, NUM_WORDS>) -> Self::Output {
         let mut l = *self;
         l &= rhs;
         l
     }
 }
 
-impl<const N: usize, const T: usize> BitOrAssign<StaticLut<N, T>> for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitOrAssign<StaticLut<NUM_VARS, NUM_WORDS>>
+    for StaticLut<NUM_VARS, NUM_WORDS>
+{
     fn bitor_assign(&mut self, rhs: Self) {
         or_inplace(self.table.as_mut(), rhs.table.as_ref());
     }
 }
 
-impl<const N: usize, const T: usize> BitOrAssign<&StaticLut<N, T>> for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitOrAssign<&StaticLut<NUM_VARS, NUM_WORDS>>
+    for StaticLut<NUM_VARS, NUM_WORDS>
+{
     fn bitor_assign(&mut self, rhs: &Self) {
         or_inplace(self.table.as_mut(), rhs.table.as_ref());
     }
 }
 
-impl<const N: usize, const T: usize> BitOr<StaticLut<N, T>> for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitOr<StaticLut<NUM_VARS, NUM_WORDS>>
+    for StaticLut<NUM_VARS, NUM_WORDS>
+{
     type Output = Self;
     fn bitor(self, rhs: Self) -> Self::Output {
         let mut l = self;
@@ -499,46 +531,58 @@ impl<const N: usize, const T: usize> BitOr<StaticLut<N, T>> for StaticLut<N, T> 
     }
 }
 
-impl<const N: usize, const T: usize> BitOr<&StaticLut<N, T>> for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitOr<&StaticLut<NUM_VARS, NUM_WORDS>>
+    for StaticLut<NUM_VARS, NUM_WORDS>
+{
     type Output = Self;
-    fn bitor(self, rhs: &StaticLut<N, T>) -> Self::Output {
+    fn bitor(self, rhs: &StaticLut<NUM_VARS, NUM_WORDS>) -> Self::Output {
         let mut l = self;
         l |= rhs;
         l
     }
 }
 
-impl<const N: usize, const T: usize> BitOr<StaticLut<N, T>> for &StaticLut<N, T> {
-    type Output = StaticLut<N, T>;
-    fn bitor(self, rhs: StaticLut<N, T>) -> Self::Output {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitOr<StaticLut<NUM_VARS, NUM_WORDS>>
+    for &StaticLut<NUM_VARS, NUM_WORDS>
+{
+    type Output = StaticLut<NUM_VARS, NUM_WORDS>;
+    fn bitor(self, rhs: StaticLut<NUM_VARS, NUM_WORDS>) -> Self::Output {
         let mut l = *self;
         l |= rhs;
         l
     }
 }
 
-impl<const N: usize, const T: usize> BitOr<&StaticLut<N, T>> for &StaticLut<N, T> {
-    type Output = StaticLut<N, T>;
-    fn bitor(self, rhs: &StaticLut<N, T>) -> Self::Output {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitOr<&StaticLut<NUM_VARS, NUM_WORDS>>
+    for &StaticLut<NUM_VARS, NUM_WORDS>
+{
+    type Output = StaticLut<NUM_VARS, NUM_WORDS>;
+    fn bitor(self, rhs: &StaticLut<NUM_VARS, NUM_WORDS>) -> Self::Output {
         let mut l = *self;
         l |= rhs;
         l
     }
 }
 
-impl<const N: usize, const T: usize> BitXorAssign<StaticLut<N, T>> for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitXorAssign<StaticLut<NUM_VARS, NUM_WORDS>>
+    for StaticLut<NUM_VARS, NUM_WORDS>
+{
     fn bitxor_assign(&mut self, rhs: Self) {
         xor_inplace(self.table.as_mut(), rhs.table.as_ref());
     }
 }
 
-impl<const N: usize, const T: usize> BitXorAssign<&StaticLut<N, T>> for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitXorAssign<&StaticLut<NUM_VARS, NUM_WORDS>>
+    for StaticLut<NUM_VARS, NUM_WORDS>
+{
     fn bitxor_assign(&mut self, rhs: &Self) {
         xor_inplace(self.table.as_mut(), rhs.table.as_ref());
     }
 }
 
-impl<const N: usize, const T: usize> BitXor<StaticLut<N, T>> for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitXor<StaticLut<NUM_VARS, NUM_WORDS>>
+    for StaticLut<NUM_VARS, NUM_WORDS>
+{
     type Output = Self;
     fn bitxor(self, rhs: Self) -> Self::Output {
         let mut l = self;
@@ -547,64 +591,76 @@ impl<const N: usize, const T: usize> BitXor<StaticLut<N, T>> for StaticLut<N, T>
     }
 }
 
-impl<const N: usize, const T: usize> BitXor<&StaticLut<N, T>> for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitXor<&StaticLut<NUM_VARS, NUM_WORDS>>
+    for StaticLut<NUM_VARS, NUM_WORDS>
+{
     type Output = Self;
-    fn bitxor(self, rhs: &StaticLut<N, T>) -> Self::Output {
+    fn bitxor(self, rhs: &StaticLut<NUM_VARS, NUM_WORDS>) -> Self::Output {
         let mut l = self;
         l ^= rhs;
         l
     }
 }
 
-impl<const N: usize, const T: usize> BitXor<StaticLut<N, T>> for &StaticLut<N, T> {
-    type Output = StaticLut<N, T>;
-    fn bitxor(self, rhs: StaticLut<N, T>) -> Self::Output {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitXor<StaticLut<NUM_VARS, NUM_WORDS>>
+    for &StaticLut<NUM_VARS, NUM_WORDS>
+{
+    type Output = StaticLut<NUM_VARS, NUM_WORDS>;
+    fn bitxor(self, rhs: StaticLut<NUM_VARS, NUM_WORDS>) -> Self::Output {
         let mut l = *self;
         l ^= rhs;
         l
     }
 }
 
-impl<const N: usize, const T: usize> BitXor<&StaticLut<N, T>> for &StaticLut<N, T> {
-    type Output = StaticLut<N, T>;
-    fn bitxor(self, rhs: &StaticLut<N, T>) -> Self::Output {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitXor<&StaticLut<NUM_VARS, NUM_WORDS>>
+    for &StaticLut<NUM_VARS, NUM_WORDS>
+{
+    type Output = StaticLut<NUM_VARS, NUM_WORDS>;
+    fn bitxor(self, rhs: &StaticLut<NUM_VARS, NUM_WORDS>) -> Self::Output {
         let mut l = *self;
         l ^= rhs;
         l
     }
 }
 
-impl<const N: usize, const T: usize> fmt::Display for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> fmt::Display
+    for StaticLut<NUM_VARS, NUM_WORDS>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt_hex(N, self.table.as_ref(), f)
+        fmt_hex(NUM_VARS, self.table.as_ref(), f)
     }
 }
 
-impl<const N: usize, const T: usize> fmt::LowerHex for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> fmt::LowerHex
+    for StaticLut<NUM_VARS, NUM_WORDS>
+{
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt_hex(N, self.table.as_ref(), f)
+        fmt_hex(NUM_VARS, self.table.as_ref(), f)
     }
 }
 
-impl<const N: usize, const T: usize> fmt::Binary for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> fmt::Binary for StaticLut<NUM_VARS, NUM_WORDS> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt_bin(N, self.table.as_ref(), f)
+        fmt_bin(NUM_VARS, self.table.as_ref(), f)
     }
 }
 
-impl<const N: usize, const T: usize> TryFrom<Lut> for StaticLut<N, T> {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> TryFrom<Lut>
+    for StaticLut<NUM_VARS, NUM_WORDS>
+{
     type Error = ();
 
     fn try_from(lut: Lut) -> Result<Self, Self::Error> {
-        if lut.num_vars() != N {
+        if lut.num_vars() != NUM_VARS {
             return Err(());
         }
-        Ok(StaticLut::<N, T>::from_blocks(lut.blocks()))
+        Ok(StaticLut::<NUM_VARS, NUM_WORDS>::from_blocks(lut.blocks()))
     }
 }
 
-impl<const N: usize, const T: usize> From<StaticLut<N, T>> for Lut {
-    fn from(lut: StaticLut<N, T>) -> Lut {
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> From<StaticLut<NUM_VARS, NUM_WORDS>> for Lut {
+    fn from(lut: StaticLut<NUM_VARS, NUM_WORDS>) -> Lut {
         Lut::from_blocks(lut.num_vars(), lut.blocks())
     }
 }
