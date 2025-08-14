@@ -424,6 +424,17 @@ pub fn flip_inplace(num_vars: usize, table: &mut [u64], ind: usize) {
     }
 }
 
+pub fn flip_n_inplace(num_vars: usize, table: &mut [u64], mask: u32) {
+    for i in 0..num_vars {
+        if ((mask >> i) & 1) != 0 {
+            flip_inplace(num_vars, table, i);
+        }
+    }
+    if ((mask >> num_vars) & 1) != 0 {
+        not_inplace(num_vars, table);
+    }
+}
+
 pub fn cofactor0_inplace(num_vars: usize, table: &mut [u64], ind: usize) {
     debug_assert_eq!(table.len(), table_size(num_vars));
     debug_assert!(ind < num_vars);
