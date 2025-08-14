@@ -83,8 +83,8 @@ pub const COUNT_MASKS: [u64; 7] = [
 ];
 
 /// u64 mask when the number of variables is smaller than 6
-pub fn num_vars_mask(num_vars: usize) -> u64 {
-    NUM_VARS_MASK[std::cmp::min(num_vars, 6)]
+pub const fn num_vars_mask(num_vars: usize) -> u64 {
+    NUM_VARS_MASK[if num_vars < 6 { num_vars } else { 6 }]
 }
 
 /// Size of the lookup table, in u64

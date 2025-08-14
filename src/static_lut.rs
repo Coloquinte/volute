@@ -22,25 +22,23 @@ pub struct StaticLut<const NUM_VARS: usize, const NUM_WORDS: usize> {
 
 impl<const NUM_VARS: usize, const NUM_WORDS: usize> Default for StaticLut<NUM_VARS, NUM_WORDS> {
     fn default() -> Self {
-        Self {
-            table: [0u64; NUM_WORDS],
-        }
+        Self::zero()
     }
 }
 
 impl<const NUM_VARS: usize, const NUM_WORDS: usize> StaticLut<NUM_VARS, NUM_WORDS> {
     /// Query the number of variables of the Lut
-    pub fn num_vars(&self) -> usize {
+    pub const fn num_vars(&self) -> usize {
         NUM_VARS
     }
 
     /// Query the number of bits in the Lut
-    pub fn num_bits(&self) -> usize {
+    pub const fn num_bits(&self) -> usize {
         1 << NUM_VARS
     }
 
     /// Query the number of 64-bit blocks in the Lut
-    pub fn num_blocks(&self) -> usize {
+    pub const fn num_blocks(&self) -> usize {
         table_size(NUM_VARS)
     }
 
@@ -60,15 +58,17 @@ impl<const NUM_VARS: usize, const NUM_WORDS: usize> StaticLut<NUM_VARS, NUM_WORD
     }
 
     /// Create a constant true Lut
-    pub fn one() -> Self {
-        let mut ret = Self::default();
-        fill_one(NUM_VARS, ret.table.as_mut());
-        ret
+    pub const fn one() -> Self {
+        Self {
+            table: [num_vars_mask(NUM_VARS); NUM_WORDS],
+        }
     }
 
     /// Create a constant false Lut
-    pub fn zero() -> Self {
-        Self::default()
+    pub const fn zero() -> Self {
+        Self {
+            table: [0; NUM_WORDS],
+        }
     }
 
     /// Create a Lut returning the value of one of its variables

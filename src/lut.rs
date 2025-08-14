@@ -61,16 +61,18 @@ impl Lut {
 
     /// Create a constant true Lut
     pub fn one(num_vars: usize) -> Lut {
-        let mut ret = Lut::new(num_vars);
-        fill_one(num_vars, ret.table.as_mut());
-        ret
+        Self {
+            num_vars,
+            table: vec![num_vars_mask(num_vars); table_size(num_vars)].into_boxed_slice(),
+        }
     }
 
     /// Create a constant false Lut
     pub fn zero(num_vars: usize) -> Lut {
-        let mut ret = Lut::new(num_vars);
-        fill_zero(num_vars, ret.table.as_mut());
-        ret
+        Self {
+            num_vars,
+            table: vec![0; table_size(num_vars)].into_boxed_slice(),
+        }
     }
 
     /// Create a Lut returning the value of one of its variables
