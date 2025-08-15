@@ -74,7 +74,7 @@ Exact decomposition methods can be used with the features `optim-mip`  (using a 
 or `optim-sat` (using a SAT solver).
 
  ```rust
-let lut = Lut::threshold(6, 5);
+let lut = Lut::threshold(4, 3);
 let esop = sop::optim::optimize_esop_mip(&[lut], 1, 2);
 ```
 

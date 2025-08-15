@@ -88,7 +88,7 @@
 //!  ```
 //! # use volute::Lut;
 //! # use volute::sop;
-//! let lut = Lut::threshold(6, 5);
+//! let lut = Lut::threshold(4, 3);
 //! # #[cfg(feature = "optim-mip")]
 //! let esop = sop::optim::optimize_esop_mip(&[lut], 1, 2);
 //! ```
