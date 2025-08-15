@@ -301,15 +301,30 @@ pub fn fmt_bin(
     write!(f, "Lut{:}({})", num_vars, to_bin(num_vars, table))
 }
 
+/// An error that can be returned when parsing a Lut
+#[derive(Debug, Clone)]
+pub enum ParseLutError {
+    /// String is the wrong length; it should be a power of 2 corresponding to the number of variables
+    WrongLength {
+        /// String length
+        length: usize,
+        /// Expected length
+        expected: usize,
+    },
+    /// Error while parsing the string as an integer
+    ParseIntError(std::num::ParseIntError),
+}
+
 /// Fill from the hexadecimal representation
-pub fn fill_hex(num_vars: usize, table: &mut [u64], s: &str) -> Result<(), ()> {
+pub fn fill_hex(num_vars: usize, table: &mut [u64], s: &str) -> Result<(), ParseLutError> {
     debug_assert_eq!(table.len(), table_size(num_vars));
-    if !s.is_ascii() {
-        return Err(());
-    }
+
     let width = hex_str_size(num_vars);
     if s.len() != width * table.len() {
-        return Err(());
+        return Err(ParseLutError::WrongLength {
+            length: s.len(),
+            expected: width * table.len(),
+        });
     }
 
     for (i, t) in table.iter_mut().rev().enumerate() {
@@ -319,8 +334,8 @@ pub fn fill_hex(num_vars: usize, table: &mut [u64], s: &str) -> Result<(), ()> {
             Ok(v) => {
                 *t = v;
             }
-            Err(_) => {
-                return Err(());
+            Err(e) => {
+                return Err(ParseLutError::ParseIntError(e));
             }
         }
     }
@@ -328,14 +343,15 @@ pub fn fill_hex(num_vars: usize, table: &mut [u64], s: &str) -> Result<(), ()> {
 }
 
 /// Fill from the binary representation
-pub fn fill_bin(num_vars: usize, table: &mut [u64], s: &str) -> Result<(), ()> {
+pub fn fill_bin(num_vars: usize, table: &mut [u64], s: &str) -> Result<(), ParseLutError> {
     debug_assert_eq!(table.len(), table_size(num_vars));
-    if !s.is_ascii() {
-        return Err(());
-    }
+
     let width = bin_str_size(num_vars);
     if s.len() != width * table.len() {
-        return Err(());
+        return Err(ParseLutError::WrongLength {
+            length: s.len(),
+            expected: width * table.len(),
+        });
     }
 
     for (i, t) in table.iter_mut().rev().enumerate() {
@@ -345,8 +361,8 @@ pub fn fill_bin(num_vars: usize, table: &mut [u64], s: &str) -> Result<(), ()> {
             Ok(v) => {
                 *t = v;
             }
-            Err(_) => {
-                return Err(());
+            Err(e) => {
+                return Err(ParseLutError::ParseIntError(e));
             }
         }
     }

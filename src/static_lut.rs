@@ -407,14 +407,14 @@ impl<const NUM_VARS: usize, const NUM_WORDS: usize> StaticLut<NUM_VARS, NUM_WORD
     }
 
     /// Build a Lut from an hexadecimal string
-    pub fn from_hex_string(s: &str) -> Result<Self, ()> {
+    pub fn from_hex_string(s: &str) -> Result<Self, ParseLutError> {
         let mut ret = Self::zero();
         fill_hex(ret.num_vars(), ret.table.as_mut(), s)?;
         Ok(ret)
     }
 
     /// Build a Lut from a binary string
-    pub fn from_bin_string(s: &str) -> Result<Self, ()> {
+    pub fn from_bin_string(s: &str) -> Result<Self, ParseLutError> {
         let mut ret = Self::zero();
         fill_bin(ret.num_vars(), ret.table.as_mut(), s)?;
         Ok(ret)

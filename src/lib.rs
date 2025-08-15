@@ -120,6 +120,7 @@ mod static_lut;
 
 pub use decomposition::DecompositionType;
 pub use lut::Lut;
+pub use operations::ParseLutError;
 pub use static_lut::StaticLut;
 
 pub use static_lut::{
