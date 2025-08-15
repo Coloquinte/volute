@@ -28,16 +28,16 @@ impl Lut {
 
     /// Query the number of bits in the Lut
     pub fn num_bits(&self) -> usize {
-        1 << self.num_vars
+        1 << self.num_vars()
     }
 
     /// Query the number of 64-bit blocks in the Lut
     pub fn num_blocks(&self) -> usize {
-        table_size(self.num_vars)
+        table_size(self.num_vars())
     }
 
     /// Create a new Lut
-    fn new(num_vars: usize) -> Lut {
+    fn new(num_vars: usize) -> Self {
         Lut {
             num_vars,
             table: vec![0; table_size(num_vars)].into_boxed_slice(),
@@ -60,7 +60,7 @@ impl Lut {
     }
 
     /// Create a constant true Lut
-    pub fn one(num_vars: usize) -> Lut {
+    pub fn one(num_vars: usize) -> Self {
         Self {
             num_vars,
             table: vec![num_vars_mask(num_vars); table_size(num_vars)].into_boxed_slice(),
@@ -68,7 +68,7 @@ impl Lut {
     }
 
     /// Create a constant false Lut
-    pub fn zero(num_vars: usize) -> Lut {
+    pub fn zero(num_vars: usize) -> Self {
         Self {
             num_vars,
             table: vec![0; table_size(num_vars)].into_boxed_slice(),
@@ -76,7 +76,7 @@ impl Lut {
     }
 
     /// Create a Lut returning the value of one of its variables
-    pub fn nth_var(num_vars: usize, var: usize) -> Lut {
+    pub fn nth_var(num_vars: usize, var: usize) -> Self {
         assert!(var < num_vars);
         let mut ret = Lut::new(num_vars);
         fill_nth_var(num_vars, ret.table.as_mut(), var);
@@ -84,35 +84,35 @@ impl Lut {
     }
 
     /// Create a Lut returning true if the number of true variables is even
-    pub fn parity(num_vars: usize) -> Lut {
+    pub fn parity(num_vars: usize) -> Self {
         let mut ret = Lut::new(num_vars);
         fill_parity(num_vars, ret.table.as_mut());
         ret
     }
 
     /// Create a Lut returning true if the majority of the variables are true
-    pub fn majority(num_vars: usize) -> Lut {
+    pub fn majority(num_vars: usize) -> Self {
         let mut ret = Lut::new(num_vars);
         fill_majority(num_vars, ret.table.as_mut());
         ret
     }
 
     /// Create a Lut returning true if at least k variables are true
-    pub fn threshold(num_vars: usize, k: usize) -> Lut {
+    pub fn threshold(num_vars: usize, k: usize) -> Self {
         let mut ret = Lut::new(num_vars);
         fill_threshold(num_vars, ret.table.as_mut(), k);
         ret
     }
 
     /// Create a Lut returning true if exactly k variables are true
-    pub fn equals(num_vars: usize, k: usize) -> Lut {
+    pub fn equals(num_vars: usize, k: usize) -> Self {
         let mut ret = Lut::new(num_vars);
         fill_equals(num_vars, ret.table.as_mut(), k);
         ret
     }
 
     /// Create a Lut representing a symmetric function. Bit at position k gives the value when k variables are true
-    pub fn symmetric(num_vars: usize, count_values: usize) -> Lut {
+    pub fn symmetric(num_vars: usize, count_values: usize) -> Self {
         let mut ret = Lut::new(num_vars);
         fill_symmetric(num_vars, ret.table.as_mut(), count_values);
         ret
@@ -120,7 +120,7 @@ impl Lut {
 
     /// Create a random Lut
     #[cfg(feature = "rand")]
-    pub fn random(num_vars: usize) -> Lut {
+    pub fn random(num_vars: usize) -> Self {
         let mut ret = Lut::new(num_vars);
         fill_random(num_vars, ret.table.as_mut());
         ret
@@ -134,7 +134,7 @@ impl Lut {
     /// Get the value of the Lut for these inputs (input bits packed in the mask)
     pub fn get_bit(&self, mask: usize) -> bool {
         self.check_bit(mask);
-        get_bit(self.num_vars, self.table.as_ref(), mask)
+        get_bit(self.num_vars(), self.table.as_ref(), mask)
     }
 
     /// Set the value of the Lut for these inputs (input bits packed in the mask)
@@ -149,28 +149,28 @@ impl Lut {
     /// Set the value of the Lut for these inputs to true (input bits packed in the mask)
     pub fn set_bit(&mut self, mask: usize) {
         self.check_bit(mask);
-        set_bit(self.num_vars, self.table.as_mut(), mask);
+        set_bit(self.num_vars(), self.table.as_mut(), mask);
     }
 
     /// Set the value of the Lut for these inputs to false (input bits packed in the mask)
     pub fn unset_bit(&mut self, mask: usize) {
         self.check_bit(mask);
-        unset_bit(self.num_vars, self.table.as_mut(), mask);
+        unset_bit(self.num_vars(), self.table.as_mut(), mask);
     }
 
     /// Count the number of one bits in the Lut
     pub fn count_ones(&self) -> usize {
-        count_ones(self.num_vars, self.table.as_ref())
+        count_ones(self.num_vars(), self.table.as_ref())
     }
 
     /// Count the number of zero bits in the Lut
     pub fn count_zeros(&self) -> usize {
-        count_zeros(self.num_vars, self.table.as_ref())
+        count_zeros(self.num_vars(), self.table.as_ref())
     }
 
     /// Complement the Lut in place: f(x) --> !f(x)
     pub fn not_inplace(&mut self) {
-        not_inplace(self.num_vars, self.table.as_mut());
+        not_inplace(self.num_vars(), self.table.as_mut());
     }
 
     /// And two Luts in place
@@ -194,60 +194,60 @@ impl Lut {
     /// Flip a variable in place: f(x1, ... xi, ... xn) --> f(x1, ... !xi, ... xn)
     pub fn flip_inplace(&mut self, ind: usize) {
         self.check_var(ind);
-        flip_inplace(self.num_vars, self.table.as_mut(), ind);
+        flip_inplace(self.num_vars(), self.table.as_mut(), ind);
     }
 
     /// Flip multiple variables in a mask, as generated by canonization methods
     ///
     /// Bit `i` determines if variable `i` should be flipped, bit `num_var` if the output should be flipped
     pub fn flip_n_inplace(&mut self, mask: u32) {
-        flip_n_inplace(self.num_vars, self.table.as_mut(), mask);
+        flip_n_inplace(self.num_vars(), self.table.as_mut(), mask);
     }
 
     /// Swap two variables in place: f(..., xi, ..., xj, ...) --> f(..., xj, ..., xi, ...)
     pub fn swap_inplace(&mut self, ind1: usize, ind2: usize) {
         self.check_var(ind1);
         self.check_var(ind2);
-        swap_inplace(self.num_vars, self.table.as_mut(), ind1, ind2);
+        swap_inplace(self.num_vars(), self.table.as_mut(), ind1, ind2);
     }
 
     /// Swap two adjacent variables in place: f(..., xi, x+1, ...) --> f(..., xi+1, xi, ...)
     pub fn swap_adjacent_inplace(&mut self, ind: usize) {
         self.check_var(ind);
         self.check_var(ind + 1);
-        swap_adjacent_inplace(self.num_vars, self.table.as_mut(), ind);
+        swap_adjacent_inplace(self.num_vars(), self.table.as_mut(), ind);
     }
 
     /// Complement the Lut: f(x) --> !f(x)
-    pub fn not(&self) -> Lut {
+    pub fn not(&self) -> Self {
         let mut l = self.clone();
         l.not_inplace();
         l
     }
 
     /// And two Luts
-    pub fn and(&self, rhs: &Lut) -> Lut {
+    pub fn and(&self, rhs: &Lut) -> Self {
         let mut l = self.clone();
         l.and_inplace(rhs);
         l
     }
 
     /// Or two Luts
-    pub fn or(&self, rhs: &Lut) -> Lut {
+    pub fn or(&self, rhs: &Lut) -> Self {
         let mut l = self.clone();
         l.or_inplace(rhs);
         l
     }
 
     /// Xor two Luts
-    pub fn xor(&self, rhs: &Lut) -> Lut {
+    pub fn xor(&self, rhs: &Lut) -> Self {
         let mut l = self.clone();
         l.xor_inplace(rhs);
         l
     }
 
     /// Flip a variable: f(x1, ... xi, ... xn) --> f(x1, ... !xi, ... xn)
-    pub fn flip(&self, ind: usize) -> Lut {
+    pub fn flip(&self, ind: usize) -> Self {
         let mut l = self.clone();
         l.flip_inplace(ind);
         l
@@ -256,21 +256,21 @@ impl Lut {
     /// Flip multiple variables in a mask, as generated by canonization methods
     ///
     /// Bit `i` determines if variable `i` should be flipped, bit `num_var` if the output should be flipped
-    pub fn flip_n(&self, mask: u32) -> Lut {
+    pub fn flip_n(&self, mask: u32) -> Self {
         let mut l = self.clone();
         l.flip_n_inplace(mask);
         l
     }
 
     /// Swap two variables: f(..., xi, ..., xj, ...) --> f(..., xj, ..., xi, ...)
-    pub fn swap(&self, ind1: usize, ind2: usize) -> Lut {
+    pub fn swap(&self, ind1: usize, ind2: usize) -> Self {
         let mut l = self.clone();
         l.swap_inplace(ind1, ind2);
         l
     }
 
     /// Swap two adjacent variables: f(..., xi, x+1, ...) --> f(..., xi+1, xi, ...)
-    pub fn swap_adjacent(&self, ind: usize) -> Lut {
+    pub fn swap_adjacent(&self, ind: usize) -> Self {
         let mut l = self.clone();
         l.swap_adjacent_inplace(ind);
         l
@@ -331,7 +331,7 @@ impl Lut {
     pub fn n_canonization(&self) -> (Self, u32) {
         let mut work = self.clone();
         let mut ret = self.clone();
-        let flip = n_canonization(self.num_vars, work.table.as_mut(), ret.table.as_mut());
+        let flip = n_canonization(self.num_vars(), work.table.as_mut(), ret.table.as_mut());
         (ret, flip)
     }
 
@@ -340,9 +340,9 @@ impl Lut {
     pub fn npn_canonization(&self) -> (Self, Vec<u8>, u32) {
         let mut work = self.clone();
         let mut ret = self.clone();
-        let mut perm = vec![0; self.num_vars];
+        let mut perm = vec![0; self.num_vars()];
         let flip = npn_canonization(
-            self.num_vars,
+            self.num_vars(),
             work.table.as_mut(),
             ret.table.as_mut(),
             perm.as_mut(),
@@ -352,17 +352,17 @@ impl Lut {
 
     /// Top decomposition of the function with respect to this variable
     pub fn top_decomposition(&self, ind: usize) -> DecompositionType {
-        top_decomposition(self.num_vars, self.table.as_ref(), ind)
+        top_decomposition(self.num_vars(), self.table.as_ref(), ind)
     }
 
     /// Returns whether the function is positive unate
     pub fn is_pos_unate(&self, ind: usize) -> bool {
-        input_pos_unate(self.num_vars, self.table.as_ref(), ind)
+        input_pos_unate(self.num_vars(), self.table.as_ref(), ind)
     }
 
     /// Returns whether the function is negative unate
     pub fn is_neg_unate(&self, ind: usize) -> bool {
-        input_neg_unate(self.num_vars, self.table.as_ref(), ind)
+        input_neg_unate(self.num_vars(), self.table.as_ref(), ind)
     }
 
     /// Collection of all Luts of a given size
