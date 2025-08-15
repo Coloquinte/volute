@@ -395,14 +395,14 @@ impl Lut {
 
     /// Return the hexadecimal string representing the function
     ///
-    /// Contrary to display, nothing else in printed: `a45b` instead of `Lut4(a45b)`
+    /// Contrary to display, nothing else is printed: `a45b` instead of `Lut4(a45b)`
     pub fn to_hex_string(&self) -> String {
         to_hex(self.num_vars(), self.table.as_ref())
     }
 
     /// Return the binary string representing the function
     ///
-    /// Contrary to display, nothing else in printed: `0101` instead of `Lut2(0101)`
+    /// Contrary to display, nothing else is printed: `0101` instead of `Lut2(0101)`
     pub fn to_bin_string(&self) -> String {
         to_bin(self.num_vars(), self.table.as_ref())
     }
