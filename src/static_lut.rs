@@ -266,7 +266,7 @@ impl<const NUM_VARS: usize, const NUM_WORDS: usize> StaticLut<NUM_VARS, NUM_WORD
     }
 
     /// Swap two adjacent variables: f(..., xi, x+1, ...) --> f(..., xi+1, xi, ...)
-    pub fn swap_adjacent(&mut self, ind: usize) -> Self {
+    pub fn swap_adjacent(&self, ind: usize) -> Self {
         let mut l = *self;
         l.swap_adjacent_inplace(ind);
         l

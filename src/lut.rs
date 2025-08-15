@@ -270,7 +270,7 @@ impl Lut {
     }
 
     /// Swap two adjacent variables: f(..., xi, x+1, ...) --> f(..., xi+1, xi, ...)
-    pub fn swap_adjacent(&mut self, ind: usize) -> Lut {
+    pub fn swap_adjacent(&self, ind: usize) -> Lut {
         let mut l = self.clone();
         l.swap_adjacent_inplace(ind);
         l
