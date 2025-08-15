@@ -7,6 +7,7 @@ mod cube;
 mod ecube;
 mod esop;
 mod soes;
+#[allow(clippy::module_inception)]
 mod sop;
 
 #[cfg(any(feature = "optim-mip", feature = "optim-sat"))]
