@@ -959,12 +959,24 @@ mod tests {
     #[test]
     #[cfg(feature = "rand")]
     fn test_n_canonization() {
-        for i in 2..=8 {
+        for i in 0..=8 {
             for _ in 0..10 {
                 let lut = Lut::random(i);
                 let (canon, flip) = lut.n_canonization();
                 assert_eq!(canon.flip_n(flip), lut);
                 assert_eq!(lut.flip_n(flip), canon);
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "rand")]
+    fn test_p_canonization() {
+        for i in 0..=8 {
+            for _ in 0..10 {
+                let lut = Lut::random(i);
+                let (canon, perm) = lut.p_canonization();
+                assert_eq!(lut.permute(&perm), canon);
             }
         }
     }
