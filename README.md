@@ -4,17 +4,19 @@
 
 <!-- cargo-rdme start -->
 
-Logic function manipulation using truth tables (or lookup tables, `Luts`) that represent the
+Logic function manipulation using truth tables (or lookup tables) that represent the
 value of the function for the 2<sup>n</sup> possible inputs.
 
 The crate implements optimized truth table datastructures, either arbitrary-size truth tables
 ([`Lut`](https://docs.rs/volute/latest/volute/struct.Lut.html)), or more efficient
 fixed-size truth tables ([`Lut2` to `Lut12`](https://docs.rs/volute/latest/volute/struct.StaticLut.html)).
 They provide logical operators and utility functions for analysis, canonization and decomposition.
-Some support is available for other standard representation, such as Sum-of-Products
-([`Sop`](https://docs.rs/volute/latest/volute/sop/struct.Sop.html)).
+Some support is available for other standard representation, such as Sum-of-Products (SOP) and
+Exclusive Sum-of-Products (ESOP).
 
-API and documentation try to follow the same terminology as the C++ library
+Volute is used by the logic optimization and analysis library
+[Quaigh](https://docs.rs/quaigh/latest/quaigh/).
+When applicable, API and documentation try to follow the same terminology as the C++ library
 [Kitty](https://libkitty.readthedocs.io/en/latest).
 
 # Examples
