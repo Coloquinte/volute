@@ -211,6 +211,12 @@ impl Lut {
         swap_inplace(self.num_vars(), self.table.as_mut(), ind1, ind2);
     }
 
+    /// Permute the variables: f(x1, ..., xi, ..., xn) --> f(xp\[1\], ..., xp\[i\], ..., xp\[n\])
+    pub fn permute_inplace(&mut self, perm: &[u8]) {
+        assert_eq!(self.num_vars, perm.len());
+        permute_inplace(self.num_vars, self.table.as_mut(), perm);
+    }
+
     /// Swap two adjacent variables in place: f(..., xi, x+1, ...) --> f(..., xi+1, xi, ...)
     pub fn swap_adjacent_inplace(&mut self, ind: usize) {
         self.check_var(ind);
@@ -266,6 +272,13 @@ impl Lut {
     pub fn swap(&self, ind1: usize, ind2: usize) -> Self {
         let mut l = self.clone();
         l.swap_inplace(ind1, ind2);
+        l
+    }
+
+    /// Permute the variables: f(x1, ..., xi, ..., xn) --> f(xp\[1\], ..., xp\[i\], ..., xp\[n\])
+    pub fn permute(&self, perm: &[u8]) -> Self {
+        let mut l = self.clone();
+        l.permute_inplace(perm);
         l
     }
 
@@ -657,6 +670,8 @@ impl fmt::Binary for Lut {
 mod tests {
     use std::collections::HashSet;
 
+    use rand::Rng;
+
     use crate::{decomposition::DecompositionType, Lut};
 
     #[test]
@@ -830,6 +845,25 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "rand")]
+    /// Test that the permutation function works using random swaps
+    fn test_permute() {
+        let mut rng = rand::thread_rng();
+        for lut_size in 1..10 {
+            let lut = Lut::random(lut_size);
+            let mut permuted = lut.clone();
+            let mut perm = (0..lut_size as u8).collect::<Vec<u8>>();
+            for _ in 0..10 {
+                let i = rng.gen_range(0..lut_size);
+                let j = rng.gen_range(0..lut_size);
+                perm.swap(i, j);
+                permuted.swap_inplace(i, j);
+            }
+            assert_eq!(lut.permute(&perm), permuted);
+        }
+    }
+
+    #[test]
     fn test_not() {
         for lut_size in 1..10 {
             assert_eq!(Lut::zero(lut_size), !Lut::one(lut_size));
@@ -860,6 +894,20 @@ mod tests {
                     let l2c = l2.flip(i);
                     assert!(!l2c.get_bit(b ^ (1 << i)));
                     assert_eq!(l2, l2c.flip(i));
+                }
+            }
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "rand")]
+    fn test_flip_n() {
+        for lut_size in 2..=8 {
+            for _ in 0..10 {
+                let lut = Lut::random(lut_size);
+                assert_eq!(!&lut, lut.flip_n(1 << lut_size));
+                for i in 0..lut_size {
+                    assert_eq!(lut.flip(i), lut.flip_n(1 << i));
                 }
             }
         }
@@ -905,20 +953,6 @@ mod tests {
                 repr.insert(lut.npn_canonization().0);
             }
             assert_eq!(repr.len(), expected[i]);
-        }
-    }
-
-    #[test]
-    #[cfg(feature = "rand")]
-    fn test_flip_n() {
-        for lut_size in 2..=8 {
-            for _ in 0..10 {
-                let lut = Lut::random(lut_size);
-                assert_eq!(!&lut, lut.flip_n(1 << lut_size));
-                for i in 0..lut_size {
-                    assert_eq!(lut.flip(i), lut.flip_n(1 << i));
-                }
-            }
         }
     }
 

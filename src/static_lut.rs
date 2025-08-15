@@ -207,6 +207,12 @@ impl<const NUM_VARS: usize, const NUM_WORDS: usize> StaticLut<NUM_VARS, NUM_WORD
         swap_inplace(self.num_vars(), self.table.as_mut(), ind1, ind2);
     }
 
+    /// Permute the variables: f(x1, ..., xi, ..., xn) --> f(xp\[1\], ..., xp\[i\], ..., xp\[n\])
+    pub fn permute_inplace(&mut self, perm: &[u8]) {
+        assert_eq!(NUM_VARS, perm.len());
+        permute_inplace(NUM_VARS, self.table.as_mut(), perm);
+    }
+
     /// Swap two adjacent variables in place: f(..., xi, x+1, ...) --> f(..., xi+1, xi, ...)
     pub fn swap_adjacent_inplace(&mut self, ind: usize) {
         self.check_var(ind);
@@ -262,6 +268,13 @@ impl<const NUM_VARS: usize, const NUM_WORDS: usize> StaticLut<NUM_VARS, NUM_WORD
     pub fn swap(&self, ind1: usize, ind2: usize) -> Self {
         let mut l = *self;
         l.swap_inplace(ind1, ind2);
+        l
+    }
+
+    /// Permute the variables: f(x1, ..., xi, ..., xn) --> f(xp\[1\], ..., xp\[i\], ..., xp\[n\])
+    pub fn permute(&self, perm: &[u8]) -> Self {
+        let mut l = *self;
+        l.permute_inplace(perm);
         l
     }
 
