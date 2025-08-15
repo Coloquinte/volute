@@ -297,8 +297,6 @@ pub fn npn_canonization_res(
     panic!("NPN-canonization reached an invalid state");
 }
 
-// TODO: handle 0 and 1 input cases, where the flip or swap list may be empty
-
 pub fn p_canonization(num_vars: usize, table: &mut [u64], best: &mut [u64], res_perm: &mut [u8]) {
     if num_vars <= 6 {
         let best_ind =

@@ -106,6 +106,7 @@
 //! let (canonical, flips) = lut.n_canonization();
 //! let (canonical, perm) = lut.p_canonization();
 //! let (canonical, perm, flips) = lut.npn_canonization();
+//! assert_eq!(lut.permute(&perm).flip_n(flips), canonical);
 //! ```
 //!
 
