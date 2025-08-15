@@ -686,7 +686,6 @@ impl fmt::Binary for Lut {
 
 #[cfg(test)]
 mod tests {
-    use rand::Rng;
 
     use crate::{decomposition::DecompositionType, Lut};
 
@@ -864,6 +863,7 @@ mod tests {
     #[cfg(feature = "rand")]
     /// Test that the permutation function works using random swaps
     fn test_permute() {
+        use rand::Rng;
         let mut rng = rand::rng();
         for lut_size in 1..10 {
             let lut = Lut::random(lut_size);
@@ -915,16 +915,29 @@ mod tests {
         }
     }
 
+    #[cfg(feature = "rand")]
+    fn gen_random(max_size: usize) -> Vec<Lut> {
+        let mut ret = Vec::new();
+        for lut_size in 1..=max_size {
+            ret.push(Lut::zero(lut_size));
+            ret.push(Lut::one(lut_size));
+            for i in 0..lut_size {
+                ret.push(Lut::nth_var(lut_size, i));
+            }
+            for _ in 0..10 {
+                ret.push(Lut::random(lut_size));
+            }
+        }
+        ret
+    }
+
     #[test]
     #[cfg(feature = "rand")]
     fn test_flip_n() {
-        for lut_size in 2..=8 {
-            for _ in 0..10 {
-                let lut = Lut::random(lut_size);
-                assert_eq!(!&lut, lut.flip_n(1 << lut_size));
-                for i in 0..lut_size {
-                    assert_eq!(lut.flip(i), lut.flip_n(1 << i));
-                }
+        for lut in gen_random(8) {
+            assert_eq!(!&lut, lut.flip_n(1 << lut.num_vars()));
+            for i in 0..lut.num_vars() {
+                assert_eq!(lut.flip(i), lut.flip_n(1 << i));
             }
         }
     }
@@ -976,40 +989,31 @@ mod tests {
     #[test]
     #[cfg(feature = "rand")]
     fn test_n_canonization() {
-        for i in 0..=8 {
-            for _ in 0..10 {
-                let lut = Lut::random(i);
-                let (canon, flip) = lut.n_canonization();
-                assert_eq!(canon.flip_n(flip), lut);
-                assert_eq!(lut.flip_n(flip), canon);
-                assert_eq!(canon == lut, lut.is_n_canonical());
-            }
+        for lut in gen_random(8) {
+            let (canon, flip) = lut.n_canonization();
+            assert_eq!(canon.flip_n(flip), lut);
+            assert_eq!(lut.flip_n(flip), canon);
+            assert_eq!(canon == lut, lut.is_n_canonical());
         }
     }
 
     #[test]
     #[cfg(feature = "rand")]
     fn test_p_canonization() {
-        for i in 0..=7 {
-            for _ in 0..10 {
-                let lut = Lut::random(i);
-                let (canon, perm) = lut.p_canonization();
-                assert_eq!(lut.permute(&perm), canon);
-                assert_eq!(canon == lut, lut.is_p_canonical());
-            }
+        for lut in gen_random(7) {
+            let (canon, perm) = lut.p_canonization();
+            assert_eq!(lut.permute(&perm), canon);
+            assert_eq!(canon == lut, lut.is_p_canonical());
         }
     }
 
     #[test]
     #[cfg(feature = "rand")]
     fn test_npn_canonization() {
-        for i in 0..=5 {
-            for _ in 0..10 {
-                let lut = Lut::random(i);
-                let (canon, perm, flip) = lut.npn_canonization();
-                assert_eq!(lut.permute(&perm).flip_n(flip), canon);
-                assert_eq!(canon == lut, lut.is_npn_canonical());
-            }
+        for lut in gen_random(5) {
+            let (canon, perm, flip) = lut.npn_canonization();
+            assert_eq!(lut.permute(&perm).flip_n(flip), canon);
+            assert_eq!(canon == lut, lut.is_npn_canonical());
         }
     }
 
