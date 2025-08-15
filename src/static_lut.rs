@@ -209,8 +209,8 @@ impl<const NUM_VARS: usize, const NUM_WORDS: usize> StaticLut<NUM_VARS, NUM_WORD
 
     /// Permute the variables: f(x1, ..., xi, ..., xn) --> f(xp\[1\], ..., xp\[i\], ..., xp\[n\])
     pub fn permute_inplace(&mut self, perm: &[u8]) {
-        assert_eq!(NUM_VARS, perm.len());
-        permute_inplace(NUM_VARS, self.table.as_mut(), perm);
+        assert_eq!(self.num_vars(), perm.len());
+        permute_inplace(self.num_vars(), self.table.as_mut(), perm);
     }
 
     /// Swap two adjacent variables in place: f(..., xi, x+1, ...) --> f(..., xi+1, xi, ...)
@@ -325,12 +325,18 @@ impl<const NUM_VARS: usize, const NUM_WORDS: usize> StaticLut<NUM_VARS, NUM_WORD
         let mut ret = *self;
         let mut perm = [0; NUM_VARS];
         p_canonization(
-            NUM_VARS,
+            self.num_vars(),
             work.table.as_mut(),
             ret.table.as_mut(),
             perm.as_mut(),
         );
         (ret, perm)
+    }
+
+    /// Returns whether the Lut is already p-canonical
+    pub fn is_p_canonical(&self) -> bool {
+        let mut work = *self;
+        is_p_canonical(self.num_vars(), &self.table, work.table.as_mut())
     }
 
     /// Find the smallest equivalent Lut up to input flips and output flip.
@@ -340,6 +346,12 @@ impl<const NUM_VARS: usize, const NUM_WORDS: usize> StaticLut<NUM_VARS, NUM_WORD
         let mut ret = *self;
         let flip = n_canonization(self.num_vars(), work.table.as_mut(), ret.table.as_mut());
         (ret, flip)
+    }
+
+    /// Returns whether the Lut is already n-canonical
+    pub fn is_n_canonical(&self) -> bool {
+        let mut work = *self;
+        is_n_canonical(self.num_vars(), &self.table, work.table.as_mut())
     }
 
     /// Find the smallest equivalent Lut up to permutation, input flips and output flip.
@@ -355,6 +367,12 @@ impl<const NUM_VARS: usize, const NUM_WORDS: usize> StaticLut<NUM_VARS, NUM_WORD
             perm.as_mut(),
         );
         (ret, perm, flip)
+    }
+
+    /// Returns whether the Lut is already npn-canonical
+    pub fn is_npn_canonical(&self) -> bool {
+        let mut work = *self;
+        is_npn_canonical(self.num_vars(), &self.table, work.table.as_mut())
     }
 
     /// Top decomposition of the function with respect to this variable

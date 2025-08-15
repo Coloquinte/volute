@@ -168,6 +168,23 @@ pub fn p_canonization_ind(
     best_ind
 }
 
+// Returns whether the Lut is p-canonical
+pub fn is_p_canonical_helper(
+    num_vars: usize,
+    table: &[u64],
+    work: &mut [u64],
+    all_swaps: &[u8],
+) -> bool {
+    work.clone_from_slice(table);
+    for &swap in all_swaps.iter() {
+        swap_adjacent_inplace(num_vars, work, swap as usize);
+        if cmp(work, table).is_lt() {
+            return false;
+        }
+    }
+    true
+}
+
 // Run all flips on the N canonization, and return the index of the best result
 pub fn n_canonization_ind(
     num_vars: usize,
@@ -190,6 +207,26 @@ pub fn n_canonization_ind(
         }
     }
     best_ind
+}
+
+// Returns whether the Lut is n-canonical
+pub fn is_n_canonical_helper(
+    num_vars: usize,
+    table: &[u64],
+    work: &mut [u64],
+    all_flips: &[u8],
+) -> bool {
+    work.clone_from_slice(table);
+    for &flip in all_flips {
+        flip_inplace(num_vars, work, flip as usize);
+        for _ in 0..2 {
+            not_inplace(num_vars, work);
+            if cmp(work, table).is_lt() {
+                return false;
+            }
+        }
+    }
+    true
 }
 
 pub fn npn_canonization_ind(
@@ -217,6 +254,30 @@ pub fn npn_canonization_ind(
         }
     }
     best_ind
+}
+
+// Returns whether the Lut is npn-canonical
+pub fn is_npn_canonical_helper(
+    num_vars: usize,
+    table: &[u64],
+    work: &mut [u64],
+    all_swaps: &[u8],
+    all_flips: &[u8],
+) -> bool {
+    work.clone_from_slice(table);
+    for swap in all_swaps {
+        swap_adjacent_inplace(num_vars, work, *swap as usize);
+        for flip in all_flips {
+            flip_inplace(num_vars, work, *flip as usize);
+            for _ in 0..2 {
+                not_inplace(num_vars, work);
+                if cmp(work, table).is_lt() {
+                    return false;
+                }
+            }
+        }
+    }
+    true
 }
 
 /// Find the corresponding permutation given the index of the best result
@@ -309,6 +370,15 @@ pub fn p_canonization(num_vars: usize, table: &mut [u64], best: &mut [u64], res_
     }
 }
 
+pub fn is_p_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> bool {
+    if num_vars <= 6 {
+        is_p_canonical_helper(num_vars, &table[0..1], &mut work[0..1], SWAPS[num_vars])
+    } else {
+        let all_swaps = generate_swaps(num_vars, true);
+        is_p_canonical_helper(num_vars, table, work, &all_swaps)
+    }
+}
+
 pub fn n_canonization(num_vars: usize, table: &mut [u64], best: &mut [u64]) -> u32 {
     if num_vars <= 6 {
         let best_ind =
@@ -318,6 +388,15 @@ pub fn n_canonization(num_vars: usize, table: &mut [u64], best: &mut [u64]) -> u
         let all_flips = generate_gray_flips(num_vars, true);
         let best_ind = n_canonization_ind(num_vars, table, best, &all_flips);
         n_canonization_res(num_vars, &all_flips, best_ind)
+    }
+}
+
+pub fn is_n_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> bool {
+    if num_vars <= 6 {
+        is_n_canonical_helper(num_vars, &table[0..1], &mut work[0..1], FLIPS[num_vars])
+    } else {
+        let all_flips = generate_gray_flips(num_vars, true);
+        is_n_canonical_helper(num_vars, table, work, &all_flips)
     }
 }
 
@@ -347,6 +426,22 @@ pub fn npn_canonization(
         let all_flips = generate_gray_flips(num_vars, true);
         let best_ind = npn_canonization_ind(num_vars, table, best, &all_swaps, &all_flips);
         npn_canonization_res(num_vars, res_perm, &all_swaps, &all_flips, best_ind)
+    }
+}
+
+pub fn is_npn_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> bool {
+    if num_vars <= 6 {
+        is_npn_canonical_helper(
+            num_vars,
+            &table[0..1],
+            &mut work[0..1],
+            SWAPS[num_vars],
+            FLIPS[num_vars],
+        )
+    } else {
+        let all_swaps = generate_swaps(num_vars, true);
+        let all_flips = generate_gray_flips(num_vars, true);
+        is_npn_canonical_helper(num_vars, table, work, &all_swaps, &all_flips)
     }
 }
 

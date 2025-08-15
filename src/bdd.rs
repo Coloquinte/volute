@@ -5,7 +5,7 @@ fn level_complexity(table: &[u64], level: usize) -> usize {
     // Gather the Luts at this level and normalize
     let shift = 1 << (level + 1);
     let mask = !0u64 >> (64 - shift);
-    let mut luts = Vec::<u64>::new();
+    let mut luts = Vec::<u64>::with_capacity(table.len() * (64 / shift));
     for t in table {
         let mut c = *t;
         for _i in (0..64).step_by(shift) {

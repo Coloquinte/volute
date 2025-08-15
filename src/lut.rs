@@ -213,8 +213,8 @@ impl Lut {
 
     /// Permute the variables: f(x1, ..., xi, ..., xn) --> f(xp\[1\], ..., xp\[i\], ..., xp\[n\])
     pub fn permute_inplace(&mut self, perm: &[u8]) {
-        assert_eq!(self.num_vars, perm.len());
-        permute_inplace(self.num_vars, self.table.as_mut(), perm);
+        assert_eq!(self.num_vars(), perm.len());
+        permute_inplace(self.num_vars(), self.table.as_mut(), perm);
     }
 
     /// Swap two adjacent variables in place: f(..., xi, x+1, ...) --> f(..., xi+1, xi, ...)
@@ -339,6 +339,12 @@ impl Lut {
         (ret, perm)
     }
 
+    /// Returns whether the Lut is already p-canonical
+    pub fn is_p_canonical(&self) -> bool {
+        let mut work = self.clone();
+        is_p_canonical(self.num_vars, &self.table, work.table.as_mut())
+    }
+
     /// Find the smallest equivalent Lut up to input flips and output flip.
     /// Return the canonical representation and the flips to obtain it.
     pub fn n_canonization(&self) -> (Self, u32) {
@@ -346,6 +352,12 @@ impl Lut {
         let mut ret = self.clone();
         let flip = n_canonization(self.num_vars(), work.table.as_mut(), ret.table.as_mut());
         (ret, flip)
+    }
+
+    /// Returns whether the Lut is already n-canonical
+    pub fn is_n_canonical(&self) -> bool {
+        let mut work = self.clone();
+        is_n_canonical(self.num_vars, &self.table, work.table.as_mut())
     }
 
     /// Find the smallest equivalent Lut up to permutation, input flips and output flip.
@@ -361,6 +373,12 @@ impl Lut {
             perm.as_mut(),
         );
         (ret, perm, flip)
+    }
+
+    /// Returns whether the Lut is already npn-canonical
+    pub fn is_npn_canonical(&self) -> bool {
+        let mut work = self.clone();
+        is_npn_canonical(self.num_vars, &self.table, work.table.as_mut())
     }
 
     /// Top decomposition of the function with respect to this variable
@@ -965,6 +983,7 @@ mod tests {
                 let (canon, flip) = lut.n_canonization();
                 assert_eq!(canon.flip_n(flip), lut);
                 assert_eq!(lut.flip_n(flip), canon);
+                assert_eq!(canon == lut, lut.is_n_canonical());
             }
         }
     }
@@ -977,6 +996,7 @@ mod tests {
                 let lut = Lut::random(i);
                 let (canon, perm) = lut.p_canonization();
                 assert_eq!(lut.permute(&perm), canon);
+                assert_eq!(canon == lut, lut.is_p_canonical());
             }
         }
     }
@@ -989,6 +1009,7 @@ mod tests {
                 let lut = Lut::random(i);
                 let (canon, perm, flip) = lut.npn_canonization();
                 assert_eq!(lut.permute(&perm).flip_n(flip), canon);
+                assert_eq!(canon == lut, lut.is_npn_canonical());
             }
         }
     }
