@@ -686,8 +686,6 @@ impl fmt::Binary for Lut {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashSet;
-
     use rand::Rng;
 
     use crate::{decomposition::DecompositionType, Lut};
@@ -964,13 +962,14 @@ mod tests {
     #[test]
     fn test_canonization_classes() {
         let expected: [usize; 7] = [1, 2, 4, 14, 222, 616126, 200253952527184];
-        for i in 2..=3 {
+        for i in 2..=4 {
             // We only test a few by default, but this was checked up to 5
-            let mut repr = HashSet::<Lut>::new();
-            for lut in Lut::all_functions(i) {
-                repr.insert(lut.npn_canonization().0);
-            }
-            assert_eq!(repr.len(), expected[i]);
+            assert_eq!(
+                Lut::all_functions(i)
+                    .filter(|x| x.is_npn_canonical())
+                    .count(),
+                expected[i]
+            );
         }
     }
 
