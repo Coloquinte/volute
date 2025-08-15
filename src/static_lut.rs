@@ -15,7 +15,7 @@ use crate::operations::*;
 use crate::Lut;
 
 /// Fixed-size truth table representing a N-input boolean function with 2^N bits; more compact than [`Lut`](crate::Lut) when the size is known
-#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
+#[derive(Clone, Copy, Hash, PartialEq, Eq)]
 pub struct StaticLut<const NUM_VARS: usize, const NUM_WORDS: usize> {
     table: [u64; NUM_WORDS],
 }
@@ -643,6 +643,12 @@ impl<const NUM_VARS: usize, const NUM_WORDS: usize> BitXor<&StaticLut<NUM_VARS, 
 impl<const NUM_VARS: usize, const NUM_WORDS: usize> fmt::Display
     for StaticLut<NUM_VARS, NUM_WORDS>
 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt_hex(NUM_VARS, self.table.as_ref(), f)
+    }
+}
+
+impl<const NUM_VARS: usize, const NUM_WORDS: usize> fmt::Debug for StaticLut<NUM_VARS, NUM_WORDS> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt_hex(NUM_VARS, self.table.as_ref(), f)
     }

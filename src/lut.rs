@@ -14,7 +14,7 @@ use crate::decomposition::*;
 use crate::operations::*;
 
 /// Arbitrary-size truth table, representing a N-input boolean function with 2^N bits, one for each input combination
-#[derive(Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Clone, Hash, PartialEq, Eq)]
 pub struct Lut {
     num_vars: usize,
     table: Box<[u64]>,
@@ -630,6 +630,12 @@ impl BitXor<&Lut> for Lut {
 }
 
 impl fmt::Display for Lut {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt_hex(self.num_vars, self.table.as_ref(), f)
+    }
+}
+
+impl fmt::Debug for Lut {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt_hex(self.num_vars, self.table.as_ref(), f)
     }
