@@ -425,9 +425,9 @@ pub fn permute_inplace(num_vars: usize, table: &mut [u64], perm: &[u8]) {
     debug_assert_eq!(table.len(), table_size(num_vars));
     debug_assert_eq!(perm.len(), num_vars);
     let mut order: Vec<u8> = (0..num_vars as u8).collect();
-    for i in 0..num_vars {
+    for (i, &p) in perm.iter().enumerate() {
         for j in i..num_vars {
-            if order[j] == perm[i] {
+            if order[j] == p {
                 swap_inplace(num_vars, table, i, j);
                 order.swap(i, j);
                 break;
