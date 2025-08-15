@@ -41,7 +41,7 @@ fn level_complexity(table: &[u64], level: usize) -> usize {
     });
 
     // Sort-uniquify
-    luts.sort();
+    luts.sort_unstable();
     luts.dedup();
     luts.len()
 }
@@ -84,12 +84,12 @@ fn large_level_complexity(table: &[u64], level: usize) -> usize {
     });
 
     // Sort-uniquify
-    luts.sort();
+    luts.sort_unstable();
     luts.dedup();
     luts.len()
 }
 
-pub fn table_complexity(num_vars: usize, table: &[u64]) -> usize {
+pub fn table_bdd_complexity(num_vars: usize, table: &[u64]) -> usize {
     let mut complexity: usize = 0;
     for level in 1..std::cmp::min(num_vars, 6) {
         complexity += level_complexity(table, level);

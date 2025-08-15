@@ -406,7 +406,7 @@ impl Lut {
 
     /// Compute the number of nodes in the BDD representing these functions
     ///
-    /// Equivalent functions (up to output complementation) are represented by the same BDD node.
+    /// Equivalent functions (up to output complementation) are represented by a single BDD node.
     /// The natural variable order (0 to num_vars) is used: smaller BDDs may be possible with another ordering.
     pub fn bdd_complexity(luts: &[Self]) -> usize {
         if luts.is_empty() {
@@ -421,7 +421,7 @@ impl Lut {
         for l in luts {
             table.extend(l.blocks().iter());
         }
-        table_complexity(num_vars, table.as_slice())
+        table_bdd_complexity(num_vars, table.as_slice())
     }
 
     /// Return the hexadecimal string representing the function

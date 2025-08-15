@@ -407,7 +407,7 @@ impl<const NUM_VARS: usize, const NUM_WORDS: usize> StaticLut<NUM_VARS, NUM_WORD
         for l in luts {
             table.extend(l.blocks().iter());
         }
-        table_complexity(NUM_VARS, table.as_slice())
+        table_bdd_complexity(NUM_VARS, table.as_slice())
     }
 
     /// Return the hexadecimal string representing the function
