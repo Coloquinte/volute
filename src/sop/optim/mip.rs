@@ -55,7 +55,7 @@ struct SopModeler<'a> {
 
 impl<'a> SopModeler<'a> {
     /// Initial creation of the modeler
-    fn new(functions: &[Lut], and_cost: i32, xor_cost: i32, or_cost: i32) -> SopModeler {
+    fn new(functions: &[Lut], and_cost: i32, xor_cost: i32, or_cost: i32) -> SopModeler<'_> {
         SopModeler {
             functions,
             and_cost,
@@ -286,7 +286,7 @@ struct EsopModeler<'a> {
 
 impl<'a> EsopModeler<'a> {
     /// Initial creation of the modeler
-    fn new(functions: &[Lut], and_cost: i32, xor_cost: i32) -> EsopModeler {
+    fn new(functions: &[Lut], and_cost: i32, xor_cost: i32) -> EsopModeler<'_> {
         EsopModeler {
             functions,
             and_cost,

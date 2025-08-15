@@ -49,7 +49,7 @@ struct SopModeler<'a> {
 
 impl<'a> SopModeler<'a> {
     /// Initial creation of the modeler
-    fn new(functions: &[Lut], and_cost: isize, xor_cost: isize, or_cost: isize) -> SopModeler {
+    fn new(functions: &[Lut], and_cost: isize, xor_cost: isize, or_cost: isize) -> SopModeler<'_> {
         SopModeler {
             functions,
             and_cost,
@@ -333,7 +333,7 @@ struct EsopModeler<'a> {
 
 impl<'a> EsopModeler<'a> {
     /// Initial creation of the modeler
-    fn new(functions: &[Lut], and_cost: isize, xor_cost: isize) -> EsopModeler {
+    fn new(functions: &[Lut], and_cost: isize, xor_cost: isize) -> EsopModeler<'_> {
         EsopModeler {
             functions,
             and_cost,
@@ -419,10 +419,9 @@ impl<'a> EsopModeler<'a> {
 
     /// Add a xor constraint to the model using these variables
     fn add_xor_constraint(&mut self, vars: Vec<Lit>, value: bool) {
-        assert!(vars.len() >= 1);
+        assert!(!vars.is_empty());
         let mut xor_val = vars[0];
-        for i in 1..vars.len() {
-            let v = vars[i];
+        for &v in vars.iter().skip(1) {
             let next_val = self.instance.new_var().pos_lit();
             self.instance.add_ternary(!xor_val, !next_val, !v);
             self.instance.add_ternary(!xor_val, next_val, v);
