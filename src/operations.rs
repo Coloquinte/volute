@@ -171,7 +171,7 @@ pub fn fill_majority(num_vars: usize, table: &mut [u64]) {
 pub fn fill_random(num_vars: usize, table: &mut [u64]) {
     use rand::RngCore;
     for t in table {
-        *t = rand::thread_rng().next_u64() & num_vars_mask(num_vars);
+        *t = rand::rng().next_u64() & num_vars_mask(num_vars);
     }
 }
 

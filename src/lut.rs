@@ -848,14 +848,14 @@ mod tests {
     #[cfg(feature = "rand")]
     /// Test that the permutation function works using random swaps
     fn test_permute() {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         for lut_size in 1..10 {
             let lut = Lut::random(lut_size);
             let mut permuted = lut.clone();
             let mut perm = (0..lut_size as u8).collect::<Vec<u8>>();
             for _ in 0..10 {
-                let i = rng.gen_range(0..lut_size);
-                let j = rng.gen_range(0..lut_size);
+                let i = rng.random_range(0..lut_size);
+                let j = rng.random_range(0..lut_size);
                 perm.swap(i, j);
                 permuted.swap_inplace(i, j);
             }
