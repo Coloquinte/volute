@@ -1,4 +1,7 @@
-use crate::operations::{cmp, flip_inplace, not_inplace, swap_adjacent_inplace};
+use crate::operations::{
+    cmp, cofactor1_inplace, count_ones, flip_inplace, not_inplace,
+    swap_adjacent_inplace,
+};
 
 /// Single bit flips to visit all possible binary values (Gray code)
 const FLIPS: &[&[u8]] = &[
@@ -427,6 +430,35 @@ pub fn is_npn_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> boo
         let all_flips = generate_gray_flips(num_vars, true);
         is_npn_canonical_helper(num_vars, table, work, &all_swaps, &all_flips)
     }
+}
+
+pub fn is_fast_p_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> bool {
+    let mut counts = Vec::with_capacity(num_vars);
+    for i in 0..num_vars {
+        work.copy_from_slice(table);
+        cofactor1_inplace(num_vars, work, i);
+        counts.push(count_ones(num_vars, work));
+    }
+    counts.is_sorted()
+}
+
+pub fn is_fast_n_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> bool {
+    let limit = 1 << (num_vars - 1);
+    if count_ones(num_vars, table) > limit {
+        return false;
+    }
+    for i in 0..num_vars {
+        work.copy_from_slice(table);
+        cofactor1_inplace(num_vars, work, i);
+        if count_ones(num_vars, work) > limit {
+            return false;
+        }
+    }
+    true
+}
+
+pub fn is_fast_npn_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> bool {
+    is_fast_n_canonical(num_vars, table, work) && is_fast_p_canonical(num_vars, table, work)
 }
 
 #[cfg(test)]

@@ -381,6 +381,24 @@ impl Lut {
         is_npn_canonical(self.num_vars(), &self.table, work.table.as_mut())
     }
 
+    /// Returns whether the Lut is already fast-p-canonical
+    pub fn is_fast_p_canonical(&self) -> bool {
+        let mut work = self.clone();
+        is_fast_p_canonical(self.num_vars(), &self.table, work.table.as_mut())
+    }
+
+    /// Returns whether the Lut is already fast-n-canonical
+    pub fn is_fast_n_canonical(&self) -> bool {
+        let mut work = self.clone();
+        is_fast_n_canonical(self.num_vars(), &self.table, work.table.as_mut())
+    }
+
+    /// Returns whether the Lut is already fast-npn-canonical
+    pub fn is_fast_npn_canonical(&self) -> bool {
+        let mut work = self.clone();
+        is_fast_npn_canonical(self.num_vars(), &self.table, work.table.as_mut())
+    }
+
     /// Top decomposition of the function with respect to this variable
     pub fn top_decomposition(&self, ind: usize) -> DecompositionType {
         top_decomposition(self.num_vars(), self.table.as_ref(), ind)
