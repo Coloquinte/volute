@@ -744,6 +744,14 @@ pub type Lut10 = StaticLut<10, 16>;
 pub type Lut11 = StaticLut<11, 32>;
 /// 12-input Lut
 pub type Lut12 = StaticLut<12, 64>;
+/// 13-input Lut
+pub type Lut13 = StaticLut<13, 128>;
+/// 14-input Lut
+pub type Lut14 = StaticLut<14, 256>;
+/// 15-input Lut
+pub type Lut15 = StaticLut<15, 512>;
+/// 16-input Lut
+pub type Lut16 = StaticLut<16, 1024>;
 
 impl From<u8> for Lut3 {
     fn from(table: u8) -> Lut3 {

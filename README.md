@@ -9,7 +9,7 @@ value of the function for the 2<sup>n</sup> possible inputs.
 
 The crate implements optimized truth table datastructures, either arbitrary-size truth tables
 ([`Lut`](https://docs.rs/volute/latest/volute/struct.Lut.html)), or more efficient
-fixed-size truth tables ([`Lut2` to `Lut12`](https://docs.rs/volute/latest/volute/struct.StaticLut.html)).
+fixed-size truth tables ([`Lut2` to `Lut16`](https://docs.rs/volute/latest/volute/struct.StaticLut.html)).
 They provide logical operators and utility functions for analysis, canonization and decomposition.
 Some support is available for other standard representation, such as Sum-of-Products (SOP) and
 Exclusive Sum-of-Products (ESOP).

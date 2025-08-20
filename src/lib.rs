@@ -6,7 +6,7 @@
 //!
 //! The crate implements optimized truth table datastructures, either arbitrary-size truth tables
 //! ([`Lut`](https://docs.rs/volute/latest/volute/struct.Lut.html)), or more efficient
-//! fixed-size truth tables ([`Lut2` to `Lut12`](https://docs.rs/volute/latest/volute/struct.StaticLut.html)).
+//! fixed-size truth tables ([`Lut2` to `Lut16`](https://docs.rs/volute/latest/volute/struct.StaticLut.html)).
 //! They provide logical operators and utility functions for analysis, canonization and decomposition.
 //! Some support is available for other standard representation, such as Sum-of-Products (SOP) and
 //! Exclusive Sum-of-Products (ESOP).
@@ -126,5 +126,6 @@ pub use operations::ParseLutError;
 pub use static_lut::StaticLut;
 
 pub use static_lut::{
-    Lut0, Lut1, Lut10, Lut11, Lut12, Lut2, Lut3, Lut4, Lut5, Lut6, Lut7, Lut8, Lut9,
+    Lut0, Lut1, Lut10, Lut11, Lut12, Lut13, Lut14, Lut15, Lut16, Lut2, Lut3, Lut4, Lut5, Lut6,
+    Lut7, Lut8, Lut9,
 };
