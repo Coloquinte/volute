@@ -434,7 +434,7 @@ pub fn permute_inplace(num_vars: usize, table: &mut [u64], perm: &[u8]) {
             }
         }
     }
-    assert_eq!(order, perm);
+    debug_assert_eq!(order, perm);
 }
 
 pub fn flip_inplace(num_vars: usize, table: &mut [u64], ind: usize) {
