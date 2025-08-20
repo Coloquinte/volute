@@ -675,13 +675,13 @@ impl<const NUM_VARS: usize, const NUM_WORDS: usize> fmt::Display
     for StaticLut<NUM_VARS, NUM_WORDS>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt_hex(NUM_VARS, self.table.as_ref(), f)
+        fmt_hex(self.num_vars(), self.table.as_ref(), f)
     }
 }
 
 impl<const NUM_VARS: usize, const NUM_WORDS: usize> fmt::Debug for StaticLut<NUM_VARS, NUM_WORDS> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt_hex(NUM_VARS, self.table.as_ref(), f)
+        fmt_hex(self.num_vars(), self.table.as_ref(), f)
     }
 }
 
@@ -689,13 +689,13 @@ impl<const NUM_VARS: usize, const NUM_WORDS: usize> fmt::LowerHex
     for StaticLut<NUM_VARS, NUM_WORDS>
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt_hex(NUM_VARS, self.table.as_ref(), f)
+        fmt_hex(self.num_vars(), self.table.as_ref(), f)
     }
 }
 
 impl<const NUM_VARS: usize, const NUM_WORDS: usize> fmt::Binary for StaticLut<NUM_VARS, NUM_WORDS> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt_bin(NUM_VARS, self.table.as_ref(), f)
+        fmt_bin(self.num_vars(), self.table.as_ref(), f)
     }
 }
 

@@ -302,7 +302,7 @@ impl Lut {
         assert_eq!(c0.num_vars, c1.num_vars);
         let mut ret = Lut::new(c0.num_vars);
         from_cofactors_inplace(
-            c0.num_vars,
+            c0.num_vars(),
             ret.table.as_mut(),
             c0.table.as_ref(),
             c1.table.as_ref(),
@@ -331,7 +331,7 @@ impl Lut {
         let mut ret = self.clone();
         let mut perm = vec![0; self.num_vars];
         p_canonization(
-            self.num_vars,
+            self.num_vars(),
             work.table.as_mut(),
             ret.table.as_mut(),
             perm.as_mut(),
@@ -342,7 +342,7 @@ impl Lut {
     /// Returns whether the Lut is already p-canonical
     pub fn is_p_canonical(&self) -> bool {
         let mut work = self.clone();
-        is_p_canonical(self.num_vars, &self.table, work.table.as_mut())
+        is_p_canonical(self.num_vars(), &self.table, work.table.as_mut())
     }
 
     /// Find the smallest equivalent Lut up to input flips and output flip.
@@ -357,7 +357,7 @@ impl Lut {
     /// Returns whether the Lut is already n-canonical
     pub fn is_n_canonical(&self) -> bool {
         let mut work = self.clone();
-        is_n_canonical(self.num_vars, &self.table, work.table.as_mut())
+        is_n_canonical(self.num_vars(), &self.table, work.table.as_mut())
     }
 
     /// Find the smallest equivalent Lut up to permutation, input flips and output flip.
@@ -378,7 +378,7 @@ impl Lut {
     /// Returns whether the Lut is already npn-canonical
     pub fn is_npn_canonical(&self) -> bool {
         let mut work = self.clone();
-        is_npn_canonical(self.num_vars, &self.table, work.table.as_mut())
+        is_npn_canonical(self.num_vars(), &self.table, work.table.as_mut())
     }
 
     /// Top decomposition of the function with respect to this variable
@@ -662,25 +662,25 @@ impl BitXor<&Lut> for Lut {
 
 impl fmt::Display for Lut {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt_hex(self.num_vars, self.table.as_ref(), f)
+        fmt_hex(self.num_vars(), self.table.as_ref(), f)
     }
 }
 
 impl fmt::Debug for Lut {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt_hex(self.num_vars, self.table.as_ref(), f)
+        fmt_hex(self.num_vars(), self.table.as_ref(), f)
     }
 }
 
 impl fmt::LowerHex for Lut {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt_hex(self.num_vars, self.table.as_ref(), f)
+        fmt_hex(self.num_vars(), self.table.as_ref(), f)
     }
 }
 
 impl fmt::Binary for Lut {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt_bin(self.num_vars, self.table.as_ref(), f)
+        fmt_bin(self.num_vars(), self.table.as_ref(), f)
     }
 }
 
