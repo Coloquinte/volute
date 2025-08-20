@@ -103,7 +103,7 @@ fn check_permutation_swap(p1: &[u8], p2: &[u8], ind: usize) {
     assert_eq!(&p1[ind + 1], &p2[ind]);
 }
 
-// Generate all unique permutations, with a single adjacent swap between consecutive ones
+/// Generate all unique permutations, with a single adjacent swap between consecutive ones
 fn generate_single_swap_permutations(num_vars: usize) -> Vec<Vec<u8>> {
     if num_vars == 0 {
         vec![vec![]]
@@ -149,7 +149,7 @@ pub fn generate_swaps(num_vars: usize, rollback: bool) -> Vec<u8> {
     swaps
 }
 
-// Run all swaps on the P canonization, and return the index of the best result
+/// Run all swaps on the P canonization, and return the index of the best result
 pub fn p_canonization_ind(
     num_vars: usize,
     table: &mut [u64],
@@ -168,7 +168,7 @@ pub fn p_canonization_ind(
     best_ind
 }
 
-// Returns whether the Lut is p-canonical
+/// Returns whether the Lut is p-canonical
 pub fn is_p_canonical_helper(
     num_vars: usize,
     table: &[u64],
@@ -185,7 +185,7 @@ pub fn is_p_canonical_helper(
     true
 }
 
-// Run all flips on the N canonization, and return the index of the best result
+/// Run all flips on the N canonization, and return the index of the best result
 pub fn n_canonization_ind(
     num_vars: usize,
     table: &mut [u64],
@@ -209,7 +209,7 @@ pub fn n_canonization_ind(
     best_ind
 }
 
-// Returns whether the Lut is n-canonical
+/// Returns whether the Lut is n-canonical
 pub fn is_n_canonical_helper(
     num_vars: usize,
     table: &[u64],
@@ -229,6 +229,8 @@ pub fn is_n_canonical_helper(
     true
 }
 
+/// Run all swaps on the P canonization and all flips on the N canonization,
+/// and return the index of the best result
 pub fn npn_canonization_ind(
     num_vars: usize,
     table: &mut [u64],
@@ -256,7 +258,7 @@ pub fn npn_canonization_ind(
     best_ind
 }
 
-// Returns whether the Lut is npn-canonical
+/// Returns whether the Lut is npn-canonical
 pub fn is_npn_canonical_helper(
     num_vars: usize,
     table: &[u64],
