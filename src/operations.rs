@@ -204,6 +204,7 @@ pub fn count_zeros(num_vars: usize, table: &[u64]) -> usize {
 }
 
 /// Logical not computation
+#[inline(always)]
 pub fn not_inplace(num_vars: usize, table: &mut [u64]) {
     let mask = num_vars_mask(num_vars);
     for t in table {
@@ -370,6 +371,7 @@ pub fn fill_bin(num_vars: usize, table: &mut [u64], s: &str) -> Result<(), Parse
 }
 
 /// Swap two variables in the LUT
+#[inline(always)]
 pub fn swap_inplace(num_vars: usize, table: &mut [u64], ind1: usize, ind2: usize) {
     debug_assert_eq!(table.len(), table_size(num_vars));
     debug_assert!(ind1 < num_vars);
@@ -416,6 +418,7 @@ pub fn swap_inplace(num_vars: usize, table: &mut [u64], ind1: usize, ind2: usize
 }
 
 /// Swap two adjacent variables in the LUT
+#[inline(always)]
 pub fn swap_adjacent_inplace(num_vars: usize, table: &mut [u64], ind: usize) {
     swap_inplace(num_vars, table, ind, ind + 1);
 }
@@ -437,6 +440,7 @@ pub fn permute_inplace(num_vars: usize, table: &mut [u64], perm: &[u8]) {
     debug_assert_eq!(order, perm);
 }
 
+#[inline(always)]
 pub fn flip_inplace(num_vars: usize, table: &mut [u64], ind: usize) {
     debug_assert_eq!(table.len(), table_size(num_vars));
     debug_assert!(ind < num_vars);
@@ -457,6 +461,7 @@ pub fn flip_inplace(num_vars: usize, table: &mut [u64], ind: usize) {
     }
 }
 
+#[inline(always)]
 pub fn flip_n_inplace(num_vars: usize, table: &mut [u64], mask: u32) {
     for i in 0..num_vars {
         if ((mask >> i) & 1) != 0 {
@@ -468,6 +473,7 @@ pub fn flip_n_inplace(num_vars: usize, table: &mut [u64], mask: u32) {
     }
 }
 
+#[inline(always)]
 pub fn cofactor0_inplace(num_vars: usize, table: &mut [u64], ind: usize) {
     debug_assert_eq!(table.len(), table_size(num_vars));
     debug_assert!(ind < num_vars);
@@ -487,6 +493,7 @@ pub fn cofactor0_inplace(num_vars: usize, table: &mut [u64], ind: usize) {
     }
 }
 
+#[inline(always)]
 pub fn cofactor1_inplace(num_vars: usize, table: &mut [u64], ind: usize) {
     debug_assert_eq!(table.len(), table_size(num_vars));
     debug_assert!(ind < num_vars);

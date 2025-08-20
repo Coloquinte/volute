@@ -150,6 +150,7 @@ pub fn generate_swaps(num_vars: usize, rollback: bool) -> Vec<u8> {
 }
 
 /// Run all swaps on the P canonization, and return the index of the best result
+#[inline(always)]
 pub fn p_canonization_ind(
     num_vars: usize,
     table: &mut [u64],
@@ -186,6 +187,7 @@ pub fn is_p_canonical_helper(
 }
 
 /// Run all flips on the N canonization, and return the index of the best result
+#[inline(always)]
 pub fn n_canonization_ind(
     num_vars: usize,
     table: &mut [u64],
@@ -231,6 +233,7 @@ pub fn is_n_canonical_helper(
 
 /// Run all swaps on the P canonization and all flips on the N canonization,
 /// and return the index of the best result
+#[inline(always)]
 pub fn npn_canonization_ind(
     num_vars: usize,
     table: &mut [u64],
@@ -283,6 +286,7 @@ pub fn is_npn_canonical_helper(
 }
 
 /// Find the corresponding permutation given the index of the best result
+#[inline(always)]
 pub fn p_canonization_res(num_vars: usize, res_perm: &mut [u8], all_swaps: &[u8], best_ind: usize) {
     debug_assert!(best_ind == usize::MAX || best_ind < all_swaps.len());
     debug_assert_eq!(res_perm.len(), num_vars);
@@ -304,6 +308,7 @@ pub fn p_canonization_res(num_vars: usize, res_perm: &mut [u8], all_swaps: &[u8]
 }
 
 /// Find the corresponding complementation given the index of the best result
+#[inline(always)]
 pub fn n_canonization_res(num_vars: usize, all_flips: &[u8], best_ind: usize) -> u32 {
     let mut ind = 0;
     let mut cur_flip = 0;
@@ -325,6 +330,7 @@ pub fn n_canonization_res(num_vars: usize, all_flips: &[u8], best_ind: usize) ->
 }
 
 /// Find the corresponding permutation and complementation given the index of the best result
+#[inline(always)]
 pub fn npn_canonization_res(
     num_vars: usize,
     res_perm: &mut [u8],
