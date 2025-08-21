@@ -157,7 +157,7 @@ pub fn p_canonization_ind(
     best: &mut [u64],
     all_swaps: &[u8],
 ) -> usize {
-    best.clone_from_slice(table);
+    debug_assert_eq!(best, table);
     let mut best_ind = usize::MAX;
     for (ind, &swap) in all_swaps.iter().enumerate() {
         swap_adjacent_inplace(num_vars, table, swap as usize);
@@ -169,6 +169,28 @@ pub fn p_canonization_ind(
     best_ind
 }
 
+/// Find the corresponding permutation given the index of the best result
+#[inline(always)]
+pub fn p_canonization_res(num_vars: usize, res_perm: &mut [u8], all_swaps: &[u8], best_ind: usize) {
+    debug_assert!(best_ind == usize::MAX || best_ind < all_swaps.len());
+    debug_assert_eq!(res_perm.len(), num_vars);
+    for (i, p) in res_perm.iter_mut().enumerate() {
+        *p = i as u8;
+    }
+    if best_ind == usize::MAX {
+        return;
+    }
+    for (ind, &swap) in all_swaps.iter().enumerate() {
+        let swp = swap as usize;
+        res_perm.swap(swp, swp + 1);
+        if ind == best_ind {
+            return;
+        }
+    }
+    // Should never arrive there...
+    panic!("P-canonization reached an invalid state");
+}
+
 /// Returns whether the Lut is p-canonical
 pub fn is_p_canonical_helper(
     num_vars: usize,
@@ -176,7 +198,7 @@ pub fn is_p_canonical_helper(
     work: &mut [u64],
     all_swaps: &[u8],
 ) -> bool {
-    work.clone_from_slice(table);
+    debug_assert_eq!(work, table);
     for &swap in all_swaps.iter() {
         swap_adjacent_inplace(num_vars, work, swap as usize);
         if cmp(work, table).is_lt() {
@@ -196,7 +218,7 @@ pub fn n_canonization_helper(
 ) -> u32 {
     let mut best_flip = 0;
     let mut cur_flip = 0;
-    best.clone_from_slice(table);
+    debug_assert_eq!(best, table);
     for &flip in all_flips {
         cur_flip ^= 1 << flip;
         flip_inplace(num_vars, table, flip as usize);
@@ -219,7 +241,7 @@ pub fn is_n_canonical_helper(
     work: &mut [u64],
     all_flips: &[u8],
 ) -> bool {
-    work.clone_from_slice(table);
+    debug_assert_eq!(work, table);
     for &flip in all_flips {
         flip_inplace(num_vars, work, flip as usize);
         for _ in 0..2 {
@@ -242,7 +264,7 @@ pub fn npn_canonization_ind(
     all_swaps: &[u8],
     all_flips: &[u8],
 ) -> usize {
-    best.clone_from_slice(table);
+    debug_assert_eq!(best, table);
     let mut best_ind = usize::MAX;
     let mut ind = 0;
     for swap in all_swaps {
@@ -270,7 +292,7 @@ pub fn is_npn_canonical_helper(
     all_swaps: &[u8],
     all_flips: &[u8],
 ) -> bool {
-    work.clone_from_slice(table);
+    debug_assert_eq!(work, table);
     for swap in all_swaps {
         swap_adjacent_inplace(num_vars, work, *swap as usize);
         for flip in all_flips {
@@ -284,28 +306,6 @@ pub fn is_npn_canonical_helper(
         }
     }
     true
-}
-
-/// Find the corresponding permutation given the index of the best result
-#[inline(always)]
-pub fn p_canonization_res(num_vars: usize, res_perm: &mut [u8], all_swaps: &[u8], best_ind: usize) {
-    debug_assert!(best_ind == usize::MAX || best_ind < all_swaps.len());
-    debug_assert_eq!(res_perm.len(), num_vars);
-    for (i, p) in res_perm.iter_mut().enumerate() {
-        *p = i as u8;
-    }
-    if best_ind == usize::MAX {
-        return;
-    }
-    for (ind, &swap) in all_swaps.iter().enumerate() {
-        let swp = swap as usize;
-        res_perm.swap(swp, swp + 1);
-        if ind == best_ind {
-            return;
-        }
-    }
-    // Should never arrive there...
-    panic!("P-canonization reached an invalid state");
 }
 
 /// Find the corresponding permutation and complementation given the index of the best result
@@ -346,6 +346,7 @@ pub fn npn_canonization_res(
 }
 
 pub fn p_canonization(num_vars: usize, table: &mut [u64], best: &mut [u64], res_perm: &mut [u8]) {
+    best.clone_from_slice(table);
     if num_vars <= 6 {
         let best_ind =
             p_canonization_ind(num_vars, &mut table[0..1], &mut best[0..1], SWAPS[num_vars]);
@@ -358,6 +359,7 @@ pub fn p_canonization(num_vars: usize, table: &mut [u64], best: &mut [u64], res_
 }
 
 pub fn is_p_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> bool {
+    work.clone_from_slice(table);
     if num_vars <= 6 {
         is_p_canonical_helper(num_vars, &table[0..1], &mut work[0..1], SWAPS[num_vars])
     } else {
@@ -367,6 +369,7 @@ pub fn is_p_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> bool 
 }
 
 pub fn n_canonization(num_vars: usize, table: &mut [u64], best: &mut [u64]) -> u32 {
+    best.clone_from_slice(table);
     if num_vars <= 6 {
         n_canonization_helper(num_vars, &mut table[0..1], &mut best[0..1], FLIPS[num_vars])
     } else {
@@ -376,6 +379,7 @@ pub fn n_canonization(num_vars: usize, table: &mut [u64], best: &mut [u64]) -> u
 }
 
 pub fn is_n_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> bool {
+    work.clone_from_slice(table);
     if num_vars <= 6 {
         is_n_canonical_helper(num_vars, &table[0..1], &mut work[0..1], FLIPS[num_vars])
     } else {
@@ -390,6 +394,7 @@ pub fn npn_canonization(
     best: &mut [u64],
     res_perm: &mut [u8],
 ) -> u32 {
+    best.clone_from_slice(table);
     if num_vars <= 6 {
         let best_ind = npn_canonization_ind(
             num_vars,
@@ -414,6 +419,7 @@ pub fn npn_canonization(
 }
 
 pub fn is_npn_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> bool {
+    work.clone_from_slice(table);
     if num_vars <= 6 {
         is_npn_canonical_helper(
             num_vars,
