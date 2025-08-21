@@ -1020,6 +1020,19 @@ mod tests {
     }
 
     #[test]
+    fn test_n_canonization_full() {
+        for i in 0..=3 {
+            for lut in Lut::all_functions(i) {
+                let (canon, flip) = lut.n_canonization();
+                assert!(canon.is_n_canonical());
+                assert_eq!(canon.flip_n(flip), lut);
+                assert_eq!(lut.flip_n(flip), canon);
+                assert_eq!(canon == lut, lut.is_n_canonical());
+            }
+        }
+    }
+
+    #[test]
     #[cfg(feature = "rand")]
     fn test_n_canonization() {
         for lut in gen_random(8) {
@@ -1031,12 +1044,34 @@ mod tests {
     }
 
     #[test]
+    fn test_p_canonization_full() {
+        for i in 0..=3 {
+            for lut in Lut::all_functions(i) {
+                let (canon, perm) = lut.p_canonization();
+                assert_eq!(lut.permute(&perm), canon);
+                assert_eq!(canon == lut, lut.is_p_canonical());
+            }
+        }
+    }
+
+    #[test]
     #[cfg(feature = "rand")]
     fn test_p_canonization() {
         for lut in gen_random(7) {
             let (canon, perm) = lut.p_canonization();
             assert_eq!(lut.permute(&perm), canon);
             assert_eq!(canon == lut, lut.is_p_canonical());
+        }
+    }
+
+    #[test]
+    fn test_npn_canonization_full() {
+        for i in 0..=3 {
+            for lut in Lut::all_functions(i) {
+                let (canon, perm, flip) = lut.npn_canonization();
+                assert_eq!(lut.permute(&perm).flip_n(flip), canon);
+                assert_eq!(canon == lut, lut.is_npn_canonical());
+            }
         }
     }
 
