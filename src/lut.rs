@@ -1038,6 +1038,20 @@ mod tests {
     }
 
     #[test]
+    fn test_fast_p_canonization_classes() {
+        let expected: [usize; 6] = [2, 4, 16, 104, 5384, 48486984];
+        for i in 0..=4 {
+            // We only test a few by default, but this was checked up to 5
+            assert_eq!(
+                Lut::all_functions(i)
+                    .filter(|x| x.is_fast_p_canonical())
+                    .count(),
+                expected[i]
+            );
+        }
+    }
+
+    #[test]
     fn test_n_canonization_full() {
         for i in 0..=3 {
             for lut in Lut::all_functions(i) {

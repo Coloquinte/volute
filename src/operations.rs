@@ -140,6 +140,22 @@ pub fn fill_symmetric(num_vars: usize, table: &mut [u64], count_values: usize) {
     }
 }
 
+/// Keep only bits corresponding to the given number of inputs at one
+pub fn select_count_inplace(_num_vars: usize, table: &mut [u64], count: usize) {
+    for (i, t) in table.iter_mut().enumerate() {
+        let c = usize::count_ones(i) as usize;
+        if c > count {
+            *t = 0;
+            continue;
+        }
+        if count - c >= COUNT_MASKS.len() {
+            *t = 0;
+            continue;
+        }
+        *t &= COUNT_MASKS[count - c];
+    }
+}
+
 /// Fill with the parity function
 pub fn fill_parity(num_vars: usize, table: &mut [u64]) {
     fill_symmetric(num_vars, table, 0xaaaa_aaaa_aaaa_aaaa);

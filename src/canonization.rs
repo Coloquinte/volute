@@ -1,5 +1,5 @@
 use crate::operations::{
-    cmp, cofactor1_inplace, count_ones, flip_inplace, not_inplace,
+    cmp, cofactor1_inplace, count_ones, flip_inplace, not_inplace, select_count_inplace,
     swap_adjacent_inplace,
 };
 
@@ -435,9 +435,14 @@ pub fn is_npn_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> boo
 pub fn is_fast_p_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> bool {
     let mut counts = Vec::with_capacity(num_vars);
     for i in 0..num_vars {
-        work.copy_from_slice(table);
-        cofactor1_inplace(num_vars, work, i);
-        counts.push(count_ones(num_vars, work));
+        let mut v = Vec::with_capacity(num_vars);
+        for count in 1..num_vars - 1 {
+            work.copy_from_slice(table);
+            cofactor1_inplace(num_vars, work, i);
+            select_count_inplace(num_vars, work, count);
+            v.push(count_ones(num_vars, work));
+        }
+        counts.push(v);
     }
     counts.is_sorted()
 }
