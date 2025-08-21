@@ -973,7 +973,15 @@ mod tests {
     }
 
     #[test]
-    fn test_canonization_classes() {
+    fn test_lut_count() {
+        for i in 0..=4 {
+            assert_eq!(Lut::all_functions(i).count(), 1 << (1 << i));
+        }
+    }
+
+    #[test]
+    fn test_npn_canonization_classes() {
+        // TODO: canonization is incorrect for 0 or 1 input
         let expected: [usize; 7] = [1, 2, 4, 14, 222, 616126, 200253952527184];
         for i in 2..=4 {
             // We only test a few by default, but this was checked up to 5
@@ -981,6 +989,31 @@ mod tests {
                 Lut::all_functions(i)
                     .filter(|x| x.is_npn_canonical())
                     .count(),
+                expected[i]
+            );
+        }
+    }
+
+    #[test]
+    fn test_n_canonization_classes() {
+        // TODO: canonization is incorrect for 0 or 1 input
+        let expected: [usize; 6] = [1, 2, 5, 30, 2288, 67172352];
+        for i in 2..=4 {
+            // We only test a few by default, but this was checked up to 5
+            assert_eq!(
+                Lut::all_functions(i).filter(|x| x.is_n_canonical()).count(),
+                expected[i]
+            );
+        }
+    }
+
+    #[test]
+    fn test_p_canonization_classes() {
+        let expected: [usize; 6] = [2, 4, 12, 80, 3984, 37333248];
+        for i in 0..=4 {
+            // We only test a few by default, but this was checked up to 5
+            assert_eq!(
+                Lut::all_functions(i).filter(|x| x.is_p_canonical()).count(),
                 expected[i]
             );
         }
