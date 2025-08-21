@@ -186,29 +186,30 @@ pub fn is_p_canonical_helper(
     true
 }
 
-/// Run all flips on the N canonization, and return the index of the best result
+/// Run all flips on the N canonization, and return the best solution
 #[inline(always)]
-pub fn n_canonization_ind(
+pub fn n_canonization_helper(
     num_vars: usize,
     table: &mut [u64],
     best: &mut [u64],
     all_flips: &[u8],
-) -> usize {
+) -> u32 {
+    let mut best_flip = 0;
+    let mut cur_flip = 0;
     best.clone_from_slice(table);
-    let mut best_ind = usize::MAX;
-    let mut ind = 0;
     for &flip in all_flips {
+        cur_flip ^= 1 << flip;
         flip_inplace(num_vars, table, flip as usize);
         for _ in 0..2 {
+            cur_flip ^= 1 << num_vars;
             not_inplace(num_vars, table);
             if cmp(table, best).is_lt() {
-                best_ind = ind;
+                best_flip = cur_flip;
                 best.clone_from_slice(table);
             }
-            ind += 1;
         }
     }
-    best_ind
+    best_flip
 }
 
 /// Returns whether the Lut is n-canonical
@@ -307,28 +308,6 @@ pub fn p_canonization_res(num_vars: usize, res_perm: &mut [u8], all_swaps: &[u8]
     panic!("P-canonization reached an invalid state");
 }
 
-/// Find the corresponding complementation given the index of the best result
-#[inline(always)]
-pub fn n_canonization_res(num_vars: usize, all_flips: &[u8], best_ind: usize) -> u32 {
-    let mut ind = 0;
-    let mut cur_flip = 0;
-    if best_ind == usize::MAX {
-        return cur_flip;
-    }
-    for &flip in all_flips {
-        cur_flip ^= 1 << flip;
-        for _ in 0..2 {
-            cur_flip ^= 1 << num_vars;
-            if ind == best_ind {
-                return cur_flip;
-            }
-            ind += 1;
-        }
-    }
-    // Should never arrive there...
-    panic!("N-canonization reached an invalid state");
-}
-
 /// Find the corresponding permutation and complementation given the index of the best result
 #[inline(always)]
 pub fn npn_canonization_res(
@@ -389,13 +368,10 @@ pub fn is_p_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> bool 
 
 pub fn n_canonization(num_vars: usize, table: &mut [u64], best: &mut [u64]) -> u32 {
     if num_vars <= 6 {
-        let best_ind =
-            n_canonization_ind(num_vars, &mut table[0..1], &mut best[0..1], FLIPS[num_vars]);
-        n_canonization_res(num_vars, FLIPS[num_vars], best_ind)
+        n_canonization_helper(num_vars, &mut table[0..1], &mut best[0..1], FLIPS[num_vars])
     } else {
         let all_flips = generate_gray_flips(num_vars, true);
-        let best_ind = n_canonization_ind(num_vars, table, best, &all_flips);
-        n_canonization_res(num_vars, &all_flips, best_ind)
+        n_canonization_helper(num_vars, table, best, &all_flips)
     }
 }
 
