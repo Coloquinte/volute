@@ -387,6 +387,12 @@ impl Lut {
         is_fast_p_canonical(self.num_vars(), &self.table, work.table.as_mut())
     }
 
+    /// Returns whether the Lut is already swap-p-canonical
+    pub fn is_swap_p_canonical(&self) -> bool {
+        let mut work = self.clone();
+        is_swap_p_canonical(self.num_vars(), &self.table, work.table.as_mut())
+    }
+
     /// Returns whether the Lut is already fast-n-canonical
     pub fn is_fast_n_canonical(&self) -> bool {
         let mut work = self.clone();
@@ -1045,6 +1051,20 @@ mod tests {
             assert_eq!(
                 Lut::all_functions(i)
                     .filter(|x| x.is_fast_p_canonical())
+                    .count(),
+                expected[i]
+            );
+        }
+    }
+
+    #[test]
+    fn test_swap_p_canonization_classes() {
+        let expected: [usize; 6] = [2, 4, 12, 80, 4176, 48486984];
+        for i in 0..=5 {
+            // We only test a few by default, but this was checked up to 5
+            assert_eq!(
+                Lut::all_functions(i)
+                    .filter(|x| x.is_swap_p_canonical())
                     .count(),
                 expected[i]
             );

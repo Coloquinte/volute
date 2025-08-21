@@ -1,6 +1,6 @@
 use crate::operations::{
     cmp, cofactor1_inplace, count_ones, flip_inplace, not_inplace, select_count_inplace,
-    swap_adjacent_inplace,
+    swap_adjacent_inplace, swap_inplace,
 };
 
 /// Single bit flips to visit all possible binary values (Gray code)
@@ -445,6 +445,20 @@ pub fn is_fast_p_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> 
         counts.push(v);
     }
     counts.is_sorted()
+}
+
+pub fn is_swap_p_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> bool {
+    work.copy_from_slice(table);
+    for i in 0..num_vars {
+        for j in i + 1..num_vars {
+            work.copy_from_slice(table);
+            swap_inplace(num_vars, work, i, j);
+            if cmp(work, table).is_lt() {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 pub fn is_fast_n_canonical(num_vars: usize, table: &[u64], work: &mut [u64]) -> bool {
